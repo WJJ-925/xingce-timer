@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>行测计时器</title>
+<style>
+  :root {
+    --bg: #f6f6f4;
+    --card: #ffffff;
+    --text: #18181b;
+    --text-2: #71717a;
+    --text-3: #a1a1aa;
+    --border: #e4e4e7;
+    --border-soft: #efefed;
+    --accent: #4f46e5;
+    --accent-soft: #eef2ff;
+    --accent-ink: #4338ca;
+    --ok: #059669;
+    --ok-soft: #ecfdf5;
+    --warn: #d97706;
+    --warn-soft: #fffbeb;
+    --bad: #dc2626;
+    --bad-soft: #fef2f2;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --shadow: 0 1px 2px rgba(24,24,27,.04), 0 8px 24px rgba(24,24,27,.05);
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    --mono: "SF Mono", ui-monospace, "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    padding-bottom: 48px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 20px; }
+
+  /* ===== 顶部栏 ===== */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(246,246,244,.86);
+    backdrop-filter: saturate(180%) blur(14px);
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .topbar-inner {
+    max-width: 880px; margin: 0 auto; padding: 14px 20px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .brand { font-size: 15px; font-weight: 650; letter-spacing: -.01em; cursor: pointer; }
+  .brand .dot { color: var(--accent); }
+  .topbar .spacer { flex: 1; }
+  .today-pill {
+    font-size: 12px; color: var(--text-2);
+    background: var(--card); border: 1px solid var(--border);
+    padding: 5px 12px; border-radius: 999px; white-space: nowrap;
+  }
+  .icon-btn {
+    border: 1px solid var(--border); background: var(--card); color: var(--text-2);
+    height: 34px; padding: 0 12px; border-radius: 999px; font-size: 13px; cursor: pointer;
+    transition: all .15s; font-family: var(--font);
+  }
+  .icon-btn:hover { border-color: var(--text-3); color: var(--text); }
+
+  /* ===== 通用 ===== */
+  h1 { font-size: 26px; font-weight: 680; letter-spacing: -.02em; }
+  .muted { color: var(--text-2); }
+  .muted-3 { color: var(--text-3); }
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+  }
+  .card-pad { padding: 24px; }
+  .section-title { font-size: 13px; font-weight: 600; color: var(--text-2); letter-spacing: .02em; }
+  .row { display: flex; align-items: center; gap: 10px; }
+  .gap-8 { gap: 8px; }
+  .mt-8 { margin-top: 8px; } .mt-16 { margin-top: 16px; } .mt-24 { margin-top: 24px; } .mt-32 { margin-top: 32px; }
+  .mb-8 { margin-bottom: 8px; } .mb-16 { margin-bottom: 16px; } .mb-24 { margin-bottom: 24px; }
+  .wrap-2 { flex-wrap: wrap; }
+
+  button { font-family: var(--font); }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    border: 1px solid var(--border); background: var(--card); color: var(--text);
+    height: 44px; padding: 0 20px; border-radius: 12px; font-size: 15px; cursor: pointer;
+    transition: all .15s; font-weight: 550;
+  }
+  .btn:hover { border-color: var(--text-3); }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-ink); border-color: var(--accent-ink); }
+  .btn-ghost { background: transparent; border-color: transparent; color: var(--text-2); }
+  .btn-ghost:hover { color: var(--text); background: var(--border-soft); }
+  .btn-danger { color: var(--bad); }
+  .btn-sm { height: 34px; padding: 0 14px; font-size: 13px; border-radius: 10px; }
+  .btn-block { width: 100%; }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 12px; padding: 3px 10px; border-radius: 999px; font-weight: 550;
+  }
+  .pill-ok { background: var(--ok-soft); color: var(--ok); }
+  .pill-warn { background: var(--warn-soft); color: var(--warn); }
+  .pill-bad { background: var(--bad-soft); color: var(--bad); }
+  .pill-gray { background: #f4f4f5; color: var(--text-2); }
+
+  /* ===== 首页 ===== */
+  .hero { padding: 40px 0 8px; }
+  .hero h1 { font-size: 34px; font-weight: 700; letter-spacing: -.03em; }
+  .hero .sub { color: var(--text-2); font-size: 15px; margin-top: 6px; }
+  .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 560px) { .mode-grid { grid-template-columns: 1fr; } }
+  .mode-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 26px; cursor: pointer; transition: all .18s;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .mode-card:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(24,24,27,.08); border-color: var(--text-3); }
+  .mode-card .ico { font-size: 22px; }
+  .mode-card .t { font-size: 18px; font-weight: 650; }
+  .mode-card .d { font-size: 13px; color: var(--text-2); }
+
+  /* ===== 诊断表 ===== */
+  table.diag { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  table.diag th, table.diag td { text-align: left; padding: 11px 10px; border-bottom: 1px solid var(--border-soft); }
+  table.diag th { color: var(--text-3); font-weight: 500; font-size: 12px; white-space: nowrap; }
+  table.diag td.num, table.diag th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  table.diag tr:last-child td { border-bottom: none; }
+  table.diag tbody tr { cursor: pointer; transition: background .12s; }
+  table.diag tbody tr:hover { background: #fafaf9; }
+  table.diag tbody tr.sel { background: var(--accent-soft); }
+
+  /* ===== 折线图 ===== */
+  .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 560px) { .chart-row { grid-template-columns: 1fr; } }
+  .chart-box svg { display: block; width: 100%; height: auto; }
+  .spark-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .spark-title { font-size: 13px; font-weight: 600; color: var(--text-2); letter-spacing: .01em; }
+  .spark-hint { font-size: 11px; font-weight: 500; color: var(--text-3); margin-left: 6px; }
+  .spark-cur { font-size: 15px; font-weight: 650; font-variant-numeric: tabular-nums; }
+  .spark-unit { font-size: 11px; font-weight: 500; color: var(--text-3); margin-left: 2px; }
+
+  /* ===== 计时器 ===== */
+  .timer-hero { text-align: center; padding: 32px 0 16px; }
+  .timer-label { font-size: 14px; color: var(--text-2); }
+  .timer-num {
+    font-family: var(--mono); font-weight: 200; letter-spacing: -.02em;
+    font-size: clamp(60px, 18vw, 150px); line-height: 1.05;
+    font-variant-numeric: tabular-nums; color: var(--text);
+    margin: 8px 0 4px; transition: color .3s;
+  }
+  .timer-num.overdue { color: var(--bad); animation: blink 1s steps(2,start) infinite; }
+  @keyframes blink { 50% { opacity: .35; } }
+  .timer-meta { color: var(--text-3); font-size: 13px; }
+  .timer-meta b { color: var(--text); font-weight: 600; }
+  .progress { height: 4px; background: var(--border-soft); border-radius: 999px; overflow: hidden; margin-top: 20px; }
+  .progress > i { display: block; height: 100%; background: var(--accent); border-radius: 999px; transition: width .3s; }
+  .progress > i.over { background: var(--bad); }
+
+  .seg-list { display: flex; flex-direction: column; gap: 6px; }
+  .seg-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+    border: 1px solid var(--border); border-radius: 12px; font-size: 14px;
+  }
+  .seg-item.cur { border-color: var(--accent); background: var(--accent-soft); }
+  .seg-item.done { color: var(--text-3); }
+  .seg-item .gi { width: 22px; height: 22px; border-radius: 50%; background: var(--border-soft);
+    display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--text-2); flex-shrink: 0; }
+  .seg-item.done .gi { background: var(--ok); color: #fff; }
+  .seg-item.cur .gi { background: var(--accent); color: #fff; }
+  .seg-item .nm { flex: 1; }
+  .seg-item .tm { font-variant-numeric: tabular-nums; font-family: var(--mono); font-size: 13px; color: var(--text-2); }
+  .seg-item.cur .tm { color: var(--accent-ink); }
+
+  /* ===== 表单 ===== */
+  label.fl { display: block; font-size: 12px; color: var(--text-2); margin-bottom: 6px; font-weight: 550; }
+  input[type=number], input[type=text], select {
+    width: 100%; height: 44px; padding: 0 14px; border: 1px solid var(--border);
+    border-radius: 12px; font-size: 15px; font-family: var(--font); color: var(--text);
+    background: var(--card); transition: border-color .15s; outline: none;
+  }
+  input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  input[type=number] { font-variant-numeric: tabular-nums; }
+
+  .opt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .opt {
+    border: 1px solid var(--border); border-radius: 12px; padding: 14px; cursor: pointer;
+    transition: all .14s; background: var(--card); text-align: left;
+  }
+  .opt:hover { border-color: var(--text-3); }
+  .opt.sel { border-color: var(--accent); background: var(--accent-soft); }
+  .opt .t { font-size: 14px; font-weight: 600; }
+  .opt .s { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+
+  .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    border: 1px solid var(--border); background: var(--card); border-radius: 999px;
+    padding: 6px 14px; font-size: 13px; cursor: pointer; transition: all .14s; color: var(--text-2);
+  }
+  .chip.sel { border-color: var(--accent); background: var(--accent); color: #fff; }
+
+  .seg-input { display: grid; grid-template-columns: 1fr 96px 96px 40px; gap: 8px; align-items: center; }
+  @media (max-width: 560px) { .seg-input { grid-template-columns: 1fr 80px 40px; } .seg-input .hide-sm { display: none; } }
+  .drag-btn { border: none; background: transparent; color: var(--text-3); cursor: grab; font-size: 16px; padding: 4px; }
+  .drag-btn:hover { color: var(--text); }
+
+  /* ===== 空状态 ===== */
+  .empty { text-align: center; padding: 40px 20px; color: var(--text-3); font-size: 14px; }
+
+  /* ===== 完成页 ===== */
+  .result-big { text-align: center; padding: 8px 0; }
+  .result-big .val { font-family: var(--mono); font-size: 40px; font-weight: 300; font-variant-numeric: tabular-nums; }
+  .result-big .lbl { font-size: 13px; color: var(--text-2); }
+
+  .finish-seg { display: grid; grid-template-columns: 1fr 130px; gap: 14px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border-soft); }
+  @media (max-width: 560px) { .finish-seg { grid-template-columns: 1fr 100px; } }
+  .finish-seg:last-child { border-bottom: none; }
+  .finish-seg .nm { font-size: 14px; font-weight: 550; }
+  .finish-seg .meta { font-size: 11px; color: var(--text-3); }
+  .finish-seg input { height: 38px; text-align: center; }
+
+  .note-ta { width: 100%; min-height: 70px; padding: 12px 14px; border: 1px solid var(--border);
+    border-radius: 12px; font-size: 14px; font-family: var(--font); resize: vertical; outline: none; background: var(--card); }
+  .note-ta:focus { border-color: var(--accent); }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 32px; transform: translateX(-50%) translateY(20px);
+    background: var(--text); color: #fff; padding: 11px 20px; border-radius: 12px; font-size: 14px;
+    opacity: 0; pointer-events: none; transition: all .25s; z-index: 100; box-shadow: var(--shadow);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 14px; }
+  .stat .v {
+    font-family: var(--mono); font-size: 24px; font-weight: 300; letter-spacing: -.01em;
+    font-variant-numeric: tabular-nums; color: var(--text);
+  }
+  .stat .l { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand" onclick="go('home')">行测<span class="dot">·</span>计时器</div>
+    <div class="spacer"></div>
+    <div class="today-pill" id="todayPill">—</div>
+    <button class="icon-btn" onclick="go('stats')">统计</button>
+    <button class="icon-btn" onclick="go('history')">历史</button>
+    <button class="icon-btn" onclick="go('settings')">设置</button>
+    <button class="icon-btn" onclick="exportData()">导出</button>
+    <button class="icon-btn" onclick="document.getElementById('importFile').click()">导入</button>
+    <input type="file" id="importFile" accept=".json" class="hidden" onchange="importData(this)">
+  </div>
+</div>
+
+<div class="wrap" id="app"><!-- 视图动态渲染 --></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================================================
+ * 数据层
+ * =================================================================== */
+const LS_RECORDS = 'xctimer_records_v1';
+const LS_CONFIG  = 'xctimer_config_v1';
+
+const DEFAULT_CONFIG = {
+  totalMinutes: 120,
+  targetAccuracy: 75,          // 目标正确率 %
+  errorTypes: ['知识点不会', '粗心失误', '时间不够', '蒙的'],
+  // 板块: id, name, count(默认题量), minutes(目标时间), subTypes(可选), isTuka(零题量环节)
+  sections: [
+    { id:'ziliao',   name:'资料分析',   count:20, minutes:25, subTypes:[] },
+    { id:'panduan',  name:'判断推理',   count:35, minutes:32, subTypes:['图形推理','定义判断','类比推理','逻辑判断'] },
+    { id:'yanyu',    name:'言语理解',   count:30, minutes:22, subTypes:['逻辑填空','片段阅读','语句表达'] },
+    { id:'shuliang', name:'数量关系',   count:10, minutes:10, subTypes:[] },
+    { id:'zhengzhi', name:'政治理论',   count:20, minutes:13, subTypes:[] },
+    { id:'changshi', name:'常识判断',   count:15, minutes:8,  subTypes:[] },
+    { id:'tuka',     name:'填涂答题卡', count:0,  minutes:6,  subTypes:[], isTuka:true },
+  ],
+  // 套卷默认顺序(用户习惯:资料→言语→数量→判断→政治理论→常识→涂卡)
+  mockOrder: ['ziliao','yanyu','shuliang','panduan','zhengzhi','changshi','tuka'],
+};
+
+function loadConfig() {
+  try {
+    const raw = localStorage.getItem(LS_CONFIG);
+    if (!raw) return structuredClone(DEFAULT_CONFIG);
+    const c = JSON.parse(raw);
+    // 兼容旧数据:补齐字段
+    return Object.assign(structuredClone(DEFAULT_CONFIG), c, {
+      sections: c.sections || structuredClone(DEFAULT_CONFIG.sections),
+      mockOrder: c.mockOrder || structuredClone(DEFAULT_CONFIG.mockOrder),
+      errorTypes: c.errorTypes || structuredClone(DEFAULT_CONFIG.errorTypes),
+    });
+  } catch (e) { return structuredClone(DEFAULT_CONFIG); }
+}
+function saveConfig() { localStorage.setItem(LS_CONFIG, JSON.stringify(config)); }
+
+function loadRecords() {
+  try { return JSON.parse(localStorage.getItem(LS_RECORDS)) || []; }
+  catch (e) { return []; }
+}
+function saveRecords() { localStorage.setItem(LS_RECORDS, JSON.stringify(records)); }
+
+let config = loadConfig();
+let records = loadRecords();
+
+/* =====================================================================
+ * 工具函数
+ * =================================================================== */
+function $(sel) { return document.querySelector(sel); }
+function secById(id) { return config.sections.find(s => s.id === id); }
+function secName(id) { const s = secById(id); return s ? s.name : id; }
+
+function fmtTime(ms) {
+  const neg = ms < 0; ms = Math.abs(ms);
+  const total = Math.round(ms / 1000);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  const mm = h > 0 ? String(m).padStart(2,'0') : String(m);
+  const out = h > 0 ? `${h}:${mm}:${String(s).padStart(2,'0')}` : `${mm}:${String(s).padStart(2,'0')}`;
+  return (neg ? '-' : '') + out;
+}
+function fmtMinSec(ms) {
+  const total = Math.round(ms / 1000);
+  return `${Math.floor(total/60)}分${total%60}秒`;
+}
+function fmtDate(iso) {
+  const d = new Date(iso);
+  const p = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function fmtClock(iso) {
+  const d = new Date(iso);
+  const p = n => String(n).padStart(2,'0');
+  return `${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function dayKeyOf(iso) {
+  const d = new Date(iso);
+  const p = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+}
+function todayKey() { return dayKeyOf(new Date().toISOString()); }
+// 一条记录归属哪一天(按开始时间,旧数据回退到保存时间)
+function recordDay(r) { return dayKeyOf(r.startAt || r.date); }
+// 历史记录的开始~结束时间(旧数据无 startAt/endAt 时回退为保存时间)
+function timeRangeHtml(r) {
+  if (r.startAt && r.endAt) return `${esc(fmtDate(r.startAt))} - ${esc(fmtClock(r.endAt))}`;
+  return esc(fmtDate(r.date));
+}
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function esc(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// 某板块的参考均速(秒/题);涂卡无均速
+function refPace(id) { const s = secById(id); return s && s.count > 0 ? (s.minutes*60 / s.count) : null; }
+// 实际参考时间(毫秒) = 均速 × 题量;涂卡固定时间
+function refTimeFor(id, qcount) {
+  const s = secById(id);
+  if (!s) return 0;
+  if (s.count > 0) return Math.round((s.minutes*60 / s.count) * qcount * 1000);
+  return s.minutes * 60 * 1000;
+}
+
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._tm); t._tm = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+/* =====================================================================
+ * 计时器引擎
+ * =================================================================== */
+class Timer {
+  constructor() { this.running = false; this.acc = 0; this.lastStart = null; }
+  start() { if (!this.running) { this.running = true; this.lastStart = Date.now(); } }
+  pause() { if (this.running) { this.acc += Date.now() - this.lastStart; this.running = false; } }
+  elapsed() { return this.running ? this.acc + (Date.now() - this.lastStart) : this.acc; }
+  reset() { this.running = false; this.acc = 0; this.lastStart = null; }
+}
+
+/* =====================================================================
+ * 视图状态
+ * =================================================================== */
+let view = 'home';
+let session = null;   // 当前计时会话
+let selectedSection = null;   // 首页选中板块(趋势)
+let tickHandle = null;
+
+function go(v) { view = v; render(); }
+function startTick() { stopTick(); tickHandle = setInterval(onTick, 100); }
+function stopTick() { if (tickHandle) { clearInterval(tickHandle); tickHandle = null; } }
+
+function onTick() {
+  if (view === 'section-timer') tickSectionTimer();
+  else if (view === 'mock-timer') tickMockTimer();
+}
+
+/* =====================================================================
+ * 渲染入口
+ * =================================================================== */
+function render() {
+  const app = $('#app');
+  stopTick();
+  if (view === 'home') renderHome(app);
+  else if (view === 'section-setup') renderSectionSetup(app);
+  else if (view === 'section-timer') { renderSectionTimer(app); startTick(); }
+  else if (view === 'section-finish') renderSectionFinish(app);
+  else if (view === 'mock-setup') renderMockSetup(app);
+  else if (view === 'mock-timer') { renderMockTimer(app); startTick(); }
+  else if (view === 'mock-finish') renderMockFinish(app);
+  else if (view === 'settings') renderSettings(app);
+  else if (view === 'stats') renderStats(app);
+  else if (view === 'history') renderHistory(app);
+  updateTodayPill();
+}
+
+/* =====================================================================
+ * 首页
+ * =================================================================== */
+function renderHome(app) {
+  const stats = todayStats();
+  app.innerHTML = `
+    <div class="hero">
+      <h1>今天练了吗?</h1>
+      <div class="sub">${stats.count ? `已练 ${stats.count} 组 · 总时长 ${fmtMinSec(stats.ms)}` : '还没有记录,选一种模式开始'}</div>
+    </div>
+
+    <div class="mode-grid mt-24">
+      <div class="mode-card" onclick="go('section-setup')">
+        <div class="ico">▤</div>
+        <div class="t">专项练习</div>
+        <div class="d">单板块限时 / 不限时,记录正确率与用时</div>
+      </div>
+      <div class="mode-card" onclick="go('mock-setup')">
+        <div class="ico">▦</div>
+        <div class="t">套卷练习</div>
+        <div class="d">自定义做题顺序,分段计时,拆解整卷用时</div>
+      </div>
+    </div>
+
+    <div class="mt-32 mb-16 row">
+      <h1 style="font-size:20px">板块诊断</h1>
+    </div>
+    ${renderDiag()}
+
+    <div class="mt-32 mb-16 row">
+      <h1 style="font-size:20px">单板块趋势</h1>
+    </div>
+    <div class="card card-pad">
+      ${renderTrend()}
+    </div>`;
+}
+
+function todayStats() {
+  const key = todayKey();
+  let count = 0, ms = 0;
+  for (const r of records) {
+    if (recordDay(r) === key) { count++; ms += (r.timeMs || 0); }
+  }
+  return { count, ms };
+}
+function updateTodayPill() {
+  const s = todayStats();
+  $('#todayPill').textContent = s.count ? `今日 ${s.count} 组 · ${fmtMinSec(s.ms)}` : '今日 0 组';
+}
+
+/* ----- 诊断表 ----- */
+function sectionStats() {
+  // 汇总: 板块id -> {n, accSum, paceSum, refSum, correctN, correctTotal, overN}
+  const m = {};
+  const init = id => m[id] = m[id] || { id, n:0, msSum:0, paceSum:0, corN:0, corTot:0, over:0 };
+
+  function feed(id, timeMs, qcount, correct, total) {
+    if (qcount <= 0 || timeMs <= 0) return;   // 跳过涂卡与提前结束未做的段
+    const s = init(id);
+    s.n++; s.msSum += timeMs;
+    if (qcount > 0) s.paceSum += (timeMs/1000) / qcount;
+    const ref = refTimeFor(id, qcount);
+    if (timeMs > ref && ref > 0) s.over++;
+    if (correct != null && total > 0) { s.corN += correct; s.corTot += total; }
+  }
+
+  for (const r of records) {
+    if (r.type === 'section') {
+      feed(r.sectionId, r.timeMs, r.questionCount, r.correct, r.questionCount);
+    } else if (r.type === 'mock') {
+      for (const seg of (r.segments || [])) {
+        feed(seg.sectionId, seg.timeMs, seg.questionCount, seg.correct, seg.questionCount);
+      }
+    }
+  }
+  return m;
+}
+
+function classify(avgPace, refPace, acc, targetAcc) {
+  const fast = refPace == null ? null : (avgPace <= refPace * 1.02);
+  const accurate = acc == null ? null : (acc >= targetAcc);
+  if (fast == null || accurate == null) return null;
+  if (fast && accurate) return { label:'保持', cls:'pill-ok', tip:'快且准' };
+  if (!fast && accurate) return { label:'需提速', cls:'pill-warn', tip:'慢但准' };
+  if (fast && !accurate) return { label:'需深耕', cls:'pill-bad', tip:'快但错' };
+  return { label:'重点攻克', cls:'pill-bad', tip:'慢且错' };
+}
+
+function renderDiag() {
+  const stats = sectionStats();
+  const ids = config.sections.map(s => s.id);
+  const rows = ids.map(id => {
+    const s = stats[id];
+    const sec = secById(id);
+    const avgPace = s ? s.paceSum / s.n : null;
+    const acc = s && s.corTot > 0 ? (s.corN / s.corTot) * 100 : null;
+    const refP = refPace(id);
+    const tag = classify(avgPace, refP, acc, config.targetAccuracy);
+    return { id, sec, s, avgPace, acc, tag };
+  }).filter(r => r.s && r.s.n > 0);
+
+  if (rows.length === 0) {
+    return `<div class="card card-pad"><div class="empty">还没有练习记录,做完一组后这里会出现各板块的诊断。</div></div>`;
+  }
+
+  let html = `<div class="card" style="overflow-x:auto"><table class="diag">
+    <thead><tr>
+      <th>板块</th><th class="num">次数</th><th class="num">正确率</th>
+      <th class="num">均速</th><th class="num">参考</th><th class="num">超时</th><th>诊断</th>
+    </tr></thead><tbody>`;
+
+  for (const r of rows) {
+    const selCls = selectedSection === r.id ? 'sel' : '';
+    html += `<tr class="${selCls}" onclick="selectSection('${r.id}')">
+      <td>${esc(r.sec.name)}${r.sec.isTuka ? '' : ''}</td>
+      <td class="num">${r.s.n}</td>
+      <td class="num">${r.acc == null ? '—' : r.acc.toFixed(0)+'%'}</td>
+      <td class="num">${r.avgPace == null ? '—' : r.avgPace.toFixed(0)+'s'}</td>
+      <td class="num">${refPace(r.id) == null ? '—' : refPace(r.id).toFixed(0)+'s'}</td>
+      <td class="num">${r.s.over}/${r.s.n}</td>
+      <td>${r.tag ? `<span class="pill ${r.tag.cls}" title="${r.tag.tip}">${r.tag.label}</span>` : '—'}</td>
+    </tr>`;
+  }
+  html += `</tbody></table></div>`;
+  html += `<div class="muted mt-8" style="font-size:12px">目标正确率 ${config.targetAccuracy}%(可在设置里改)· 点某行查看该板块趋势</div>`;
+  return html;
+}
+
+/* ----- 趋势 + 折线图 ----- */
+function selectSection(id) {
+  selectedSection = id;
+  go('home');
+}
+
+function trendData(id) {
+  const out = [];
+  const push = (date, timeMs, qcount, correct) => {
+    if (qcount <= 0 || timeMs <= 0) return;   // 跳过涂卡与提前结束未做的段
+    out.push({
+      date, timeMs, qcount,
+      pace: (timeMs/1000) / qcount,
+      acc: correct != null ? (correct/qcount)*100 : null,
+    });
+  };
+  for (const r of records) {
+    if (r.type === 'section' && r.sectionId === id) push(r.date, r.timeMs, r.questionCount, r.correct);
+    else if (r.type === 'mock') for (const seg of (r.segments||[]))
+      if (seg.sectionId === id) push(r.date, seg.timeMs, seg.questionCount, seg.correct);
+  }
+  out.sort((a,b) => a.date.localeCompare(b.date));
+  return out;
+}
+
+function renderTrend() {
+  const ids = config.sections.map(s => s.id).filter(id => sectionStats()[id]);
+  const hasAny = ids.some(id => sectionStats()[id]);
+  if (!hasAny) return `<div class="empty">暂无数据</div>`;
+
+  const selId = (selectedSection && trendData(selectedSection).length) ? selectedSection : ids[0];
+  const data = trendData(selId);
+  const sec = secById(selId);
+  const refP = refPace(selId);
+
+  let html = `<div class="chip-row mb-16">`;
+  for (const id of ids) {
+    html += `<button class="chip ${id===selId?'sel':''}" onclick="selectSection('${id}')">${esc(secName(id))}</button>`;
+  }
+  html += `</div>`;
+
+  if (data.length === 0) { html += `<div class="empty">该板块暂无数据</div>`; return html; }
+
+  const recent = data.slice(-10);
+  html += `<div class="chart-row mb-16">
+    <div class="chart-box">${sparkline(recent.map(d => ({v:d.pace})), {color:'#4f46e5', ref:refP, unit:'s/题', title:'均速', hint:'越低越好'})}</div>
+    <div class="chart-box">${sparkline(recent.map(d => ({v:d.acc})), {color:'#059669', ref:config.targetAccuracy, unit:'%', title:'正确率', hint:'越高越好'})}</div>
+  </div>`;
+
+  html += `<div style="overflow-x:auto"><table class="diag" style="font-size:13px"><thead><tr>
+    <th>日期</th><th class="num">用时</th><th class="num">题量</th><th class="num">均速</th><th class="num">正确率</th>
+  </tr></thead><tbody>`;
+  for (let i = data.length-1; i >= 0; i--) {
+    const d = data[i];
+    html += `<tr><td>${esc(fmtDate(d.date))}</td>
+      <td class="num">${fmtTime(d.timeMs)}</td>
+      <td class="num">${d.qcount}</td>
+      <td class="num">${d.pace.toFixed(0)}s/题</td>
+      <td class="num">${d.acc==null?'—':d.acc.toFixed(0)+'%'}</td></tr>`;
+  }
+  html += `</tbody></table></div>`;
+  return html;
+}
+
+function sparkline(points, opts) {
+  if (!points || points.length === 0) return '<div class="empty" style="padding:20px">无数据</div>';
+  const vals = points.map(p => p.v).filter(v => v != null);
+  if (vals.length === 0) return '<div class="empty" style="padding:20px">无数据</div>';
+
+  const W = 320, H = 140, padX = 12, top = 24, bottom = 120;
+  let min = Math.min(...vals), max = Math.max(...vals);
+  if (opts.ref != null) { min = Math.min(min, opts.ref); max = Math.max(max, opts.ref); }
+  if (max - min < 1e-9) { max += 1; min -= 1; }
+  const X = i => points.length === 1 ? W/2 : padX + (i/(points.length-1)) * (W - padX*2);
+  const Y = v => bottom - ((v - min)/(max - min)) * (bottom - top);
+
+  // 按 null 断成多段,遇到缺失值断线而不是错误连线
+  const segs = []; let cur = [];
+  points.forEach((p, i) => {
+    if (p.v == null) { if (cur.length) { segs.push(cur); cur = []; } }
+    else cur.push([X(i), Y(p.v)]);
+  });
+  if (cur.length) segs.push(cur);
+
+  const gid = 'g' + (opts.color || '000000').replace('#', '');
+
+  // 平滑曲线 + 渐变面积
+  let area = '', line = '';
+  for (const s of segs) {
+    if (s.length < 2) continue;
+    const d = smoothPath(s);
+    line += `<path d="${d}" fill="none" stroke="${opts.color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    area += `<path d="${d} L ${s[s.length-1][0].toFixed(1)},${bottom} L ${s[0][0].toFixed(1)},${bottom} Z" fill="url(#${gid})"/>`;
+  }
+  // 数据点(白底描边)
+  const dots = segs.flat().map(p =>
+    `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.6" fill="#fff" stroke="${opts.color}" stroke-width="2"/>`
+  ).join('');
+
+  // 水平网格线(3 条)
+  let grid = '';
+  for (let k = 1; k <= 3; k++) {
+    const y = Y(min + (max - min) * (k / 4)).toFixed(1);
+    grid += `<line x1="${padX}" y1="${y}" x2="${W-padX}" y2="${y}" stroke="#ececea" stroke-width="1"/>`;
+  }
+
+  // 参考虚线 + 白描边标签
+  let refEl = '';
+  if (opts.ref != null) {
+    const y = Y(opts.ref).toFixed(1);
+    refEl = `<line x1="${padX}" y1="${y}" x2="${W-padX}" y2="${y}" stroke="#d4d4d8" stroke-dasharray="4 4" stroke-width="1.2"/>
+      <text x="${W-padX}" y="${Math.max(12, y-6).toFixed(1)}" font-size="8.5" fill="#71717a" text-anchor="end" stroke="#ffffff" stroke-width="3" paint-order="stroke">参考 ${opts.ref.toFixed(0)}${esc(opts.unit||'')}</text>`;
+  }
+
+  // 最新值(最后一个非 null)
+  let curVal = null;
+  for (let i = points.length - 1; i >= 0; i--) if (points[i].v != null) { curVal = points[i].v; break; }
+  const curTxt = curVal == null ? '—' : (Number.isInteger(curVal) ? String(curVal) : curVal.toFixed(1));
+
+  return `<div class="spark">
+    <div class="spark-head">
+      <div class="spark-title">${esc(opts.title)}${opts.hint ? `<span class="spark-hint">${esc(opts.hint)}</span>` : ''}</div>
+      <div class="spark-cur" style="color:${opts.color}">${curTxt}<span class="spark-unit">${esc(opts.unit||'')}</span></div>
+    </div>
+    <svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img">
+      <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="${opts.color}" stop-opacity="0.16"/>
+        <stop offset="1" stop-color="${opts.color}" stop-opacity="0"/>
+      </linearGradient></defs>
+      ${grid}${area}${line}${refEl}${dots}
+    </svg>
+  </div>`;
+}
+
+function smoothPath(pts) {
+  if (!pts || pts.length < 2) return '';
+  let d = `M ${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i-1] || pts[i];
+    const p1 = pts[i];
+    const p2 = pts[i+1];
+    const p3 = pts[i+2] || p2;
+    const c1x = p1[0] + (p2[0]-p0[0]) / 6;
+    const c1y = p1[1] + (p2[1]-p0[1]) / 6;
+    const c2x = p2[0] - (p3[0]-p1[0]) / 6;
+    const c2y = p2[1] - (p3[1]-p1[1]) / 6;
+    d += ` C ${c1x.toFixed(1)},${c1y.toFixed(1)} ${c2x.toFixed(1)},${c2y.toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;
+  }
+  return d;
+}
+
+/* ----- 历史记录 ----- */
+function mockAcc(r) {
+  const segs = r.segments || [];
+  let corN = 0, tot = 0;
+  for (const g of segs) if (g.correct != null && g.questionCount > 0) { corN += g.correct; tot += g.questionCount; }
+  return tot > 0 ? (corN/tot*100) : null;
+}
+
+function renderHistory(app) {
+  let html = `
+    <div class="hero" style="padding-bottom:16px">
+      <div class="row mb-8"><button class="btn-ghost btn-sm" onclick="go('home')">← 返回</button></div>
+      <h1>练习历史</h1>
+      <div class="sub">全部练习记录,按时间倒序,可删除单条</div>
+    </div>`;
+
+  if (!records.length) {
+    app.innerHTML = html + `<div class="card card-pad"><div class="empty">暂无记录</div></div>`;
+    return;
+  }
+
+  const sorted = records.slice().sort((a,b) => b.date.localeCompare(a.date));
+  html += `<div class="row mb-16" style="justify-content:flex-end"><span class="muted" style="font-size:13px">共 ${records.length} 条</span></div>`;
+
+  for (const r of sorted) {
+    if (r.type === 'section') {
+      const acc = r.correct != null ? (r.correct/r.questionCount*100).toFixed(0)+'%' : '—';
+      html += `<div class="card card-pad mb-12">
+        <div class="row" style="justify-content:space-between;align-items:flex-start;gap:12px">
+          <div style="min-width:0">
+            <div class="row" style="gap:8px;align-items:baseline;flex-wrap:wrap">
+              <span class="pill pill-ok">专项</span>
+              <span style="font-weight:650">${esc(secName(r.sectionId))}</span>
+              ${r.subType ? `<span class="muted-3" style="font-size:13px">${esc(r.subType)}</span>` : ''}
+            </div>
+            <div class="muted-3 mt-4" style="font-size:13px">${timeRangeHtml(r)} · ${r.questionCount} 题 · 用时 ${fmtTime(r.timeMs)} / 参考 ${fmtTime(r.targetMs)}</div>
+            ${r.errorType && r.errorType.length ? `<div class="row mt-8" style="gap:6px;flex-wrap:wrap">${r.errorType.map(t=>`<span class="pill pill-warn">${esc(t)}</span>`).join('')}</div>` : ''}
+            ${r.note ? `<div class="muted mt-8" style="font-size:13px">${esc(r.note)}</div>` : ''}
+          </div>
+          <div class="row" style="gap:8px;align-items:center;flex-shrink:0">
+            <span style="font-size:18px;font-weight:650">${acc}</span>
+            <button class="icon-btn" onclick="deleteRecord('${r.id}')" title="删除">✕</button>
+          </div>
+        </div>
+      </div>`;
+    } else {
+      const acc = mockAcc(r);
+      const segSummary = (r.segments||[]).map(g =>
+        `${esc(secName(g.sectionId))}${g.questionCount>0 && g.correct!=null ? ' '+(g.correct/g.questionCount*100).toFixed(0)+'%' : ''}`
+      ).join(' · ');
+      html += `<div class="card card-pad mb-12">
+        <div class="row" style="justify-content:space-between;align-items:flex-start;gap:12px">
+          <div style="min-width:0">
+            <div class="row" style="gap:8px;align-items:baseline;flex-wrap:wrap">
+              <span class="pill pill-warn">套卷</span>
+              <span style="font-weight:650">${fmtTime(r.timeMs)} / ${fmtTime(r.targetMs)}</span>
+              <span class="muted-3" style="font-size:13px">${r.timeMs>r.targetMs?'超时':'富余'}</span>
+            </div>
+            <div class="muted-3 mt-4" style="font-size:13px">${timeRangeHtml(r)} · ${(r.segments||[]).length} 段</div>
+            <div class="muted mt-8" style="font-size:13px">${segSummary}</div>
+          </div>
+          <div class="row" style="gap:8px;align-items:center;flex-shrink:0">
+            ${acc!=null?`<span style="font-size:18px;font-weight:650">${acc.toFixed(0)}%</span>`:'<span class="muted-3">—</span>'}
+            <button class="icon-btn" onclick="deleteRecord('${r.id}')" title="删除">✕</button>
+          </div>
+        </div>
+      </div>`;
+    }
+  }
+
+  app.innerHTML = html;
+}
+
+function deleteRecord(id) {
+  records = records.filter(r => r.id !== id);
+  saveRecords();
+  render();
+}
+
+/* =====================================================================
+ * 统计
+ * =================================================================== */
+// 聚合一组记录 → {count, totalMs, totalQ, correct, total, bySection}
+function aggregate(list) {
+  const out = { count:0, totalMs:0, totalQ:0, correct:0, total:0, bySection:{} };
+  const sec = id => (out.bySection[id] = out.bySection[id] || { ms:0, q:0, correct:0, total:0 });
+  for (const r of list) {
+    out.count++;
+    out.totalMs += (r.timeMs || 0);
+    if (r.type === 'section') {
+      out.totalQ += (r.questionCount || 0);
+      if (r.correct != null && r.questionCount > 0) { out.correct += r.correct; out.total += r.questionCount; }
+      const s = sec(r.sectionId);
+      s.ms += (r.timeMs || 0); s.q += (r.questionCount || 0);
+      if (r.correct != null && r.questionCount > 0) { s.correct += r.correct; s.total += r.questionCount; }
+    } else if (r.type === 'mock') {
+      for (const g of (r.segments || [])) {
+        if (g.questionCount <= 0) continue;   // 涂卡等零题量环节不计题量与正确率
+        out.totalQ += g.questionCount;
+        if (g.correct != null) { out.correct += g.correct; out.total += g.questionCount; }
+        const s = sec(g.sectionId);
+        s.ms += (g.timeMs || 0); s.q += g.questionCount;
+        if (g.correct != null) { s.correct += g.correct; s.total += g.questionCount; }
+      }
+    }
+  }
+  return out;
+}
+function accPct(a) { return a.total > 0 ? (a.correct / a.total * 100) : null; }
+function accCell(a) { const p = accPct(a); return p == null ? '—' : p.toFixed(0) + '%'; }
+
+function renderStats(app) {
+  const today = aggregate(records.filter(r => recordDay(r) === todayKey()));
+  const all = aggregate(records);
+  const days = new Set(records.map(recordDay)).size;
+  const avgMs = all.count ? all.totalMs / all.count : 0;
+
+  const secRows = config.sections.filter(s => !s.isTuka && today.bySection[s.id]).map(s => {
+    const b = today.bySection[s.id];
+    return `<tr><td>${esc(s.name)}</td><td class="num">${fmtMinSec(b.ms)}</td><td class="num">${b.q} 题</td><td class="num">${accCell(b)}</td></tr>`;
+  }).join('');
+
+  let rangeHtml = '';
+  if (all.count) {
+    const dates = records.map(recordDay).sort();
+    rangeHtml = `<div class="muted mt-16" style="font-size:13px">覆盖 ${esc(dates[0])} ~ ${esc(dates[dates.length-1])}</div>`;
+  }
+
+  app.innerHTML = `
+    <div class="hero" style="padding-bottom:16px">
+      <div class="row mb-8"><button class="btn-ghost btn-sm" onclick="go('home')">← 返回</button></div>
+      <h1>统计</h1>
+      <div class="sub">当天汇总与累计计时</div>
+    </div>
+
+    <div class="card card-pad mb-16">
+      <div class="section-title mb-16">今天 · ${esc(todayKey())}</div>
+      ${today.count ? `
+        <div class="stat-grid">
+          <div class="stat"><div class="v">${today.count}</div><div class="l">练习组数</div></div>
+          <div class="stat"><div class="v">${fmtMinSec(today.totalMs)}</div><div class="l">总时长</div></div>
+          <div class="stat"><div class="v">${today.totalQ}</div><div class="l">总题量</div></div>
+          <div class="stat"><div class="v">${accCell(today)}</div><div class="l">正确率</div></div>
+        </div>
+        ${secRows ? `<div style="overflow-x:auto"><table class="diag mt-16"><thead><tr><th>板块</th><th class="num">用时</th><th class="num">题量</th><th class="num">正确率</th></tr></thead><tbody>${secRows}</tbody></table></div>` : ''}
+      ` : `<div class="empty" style="padding:24px">今天还没有练习</div>`}
+    </div>
+
+    <div class="card card-pad mb-16">
+      <div class="section-title mb-16">累计</div>
+      ${all.count ? `
+        <div class="stat-grid">
+          <div class="stat"><div class="v">${all.count}</div><div class="l">总组数</div></div>
+          <div class="stat"><div class="v">${fmtMinSec(all.totalMs)}</div><div class="l">总时长</div></div>
+          <div class="stat"><div class="v">${all.totalQ}</div><div class="l">总题量</div></div>
+          <div class="stat"><div class="v">${accCell(all)}</div><div class="l">总正确率</div></div>
+          <div class="stat"><div class="v">${days}</div><div class="l">练习天数</div></div>
+          <div class="stat"><div class="v">${fmtMinSec(avgMs)}</div><div class="l">平均每次</div></div>
+        </div>
+        ${rangeHtml}
+      ` : `<div class="empty" style="padding:24px">还没有练习记录</div>`}
+    </div>`;
+}
+
+/* =====================================================================
+ * 专项练习
+ * =================================================================== */
+function renderSectionSetup(app) {
+  if (!session || session.mode !== 'section') {
+    const first = config.sections.find(s => !s.isTuka);
+    session = { mode:'section', sectionId: first.id, subType:null, questionCount: first.count, timeMode:'countup' };
+  }
+  const opts = config.sections.filter(s => !s.isTuka).map(s => `
+    <button class="opt ${session && session.sectionId===s.id?'sel':''}" onclick="pickSection('${s.id}')">
+      <div class="t">${esc(s.name)}</div>
+      <div class="s">${s.count}题 · ${s.minutes}分${s.subTypes.length ? ' · 可细分' : ''}</div>
+    </button>`).join('');
+
+  app.innerHTML = `
+    <div class="hero" style="padding-bottom:16px">
+      <div class="row mb-8"><button class="btn-ghost btn-sm" onclick="go('home')">← 返回</button></div>
+      <h1>专项练习</h1>
+      <div class="sub">选板块、填题量,开表计时</div>
+    </div>
+
+    <div class="card card-pad mb-16">
+      <div class="section-title mb-16">1 · 选择板块</div>
+      <div class="opt-grid">${opts}</div>
+      <div id="subTypeRow" class="mt-16 hidden">
+        <label class="fl">二级题型(可选,留空 = 整个板块)</label>
+        <div class="chip-row" id="subTypeChips"></div>
+      </div>
+    </div>
+
+    <div class="card card-pad mb-16">
+      <div class="section-title mb-16">2 · 题量与计时</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div><label class="fl">题量</label>
+          <input type="number" id="qCount" min="1" value="${session?.questionCount || (session?.sectionId ? secById(session.sectionId).count : 20)}" oninput="setupPreview()"></div>
+        <div><label class="fl">计时方式</label>
+          <select id="timeMode" onchange="setupPreview()">
+            <option value="countup" ${!session || session.timeMode!=='countdown'?'selected':''}>正计时(不限时)</option>
+            <option value="countdown" ${session && session.timeMode==='countdown'?'selected':''}>倒计时(限时)</option>
+          </select></div>
+      </div>
+      <div id="targetWrap" class="mt-16 hidden">
+        <label class="fl">目标时间</label>
+        <input type="number" id="targetMin" min="1" step="1" value="10" oninput="setupPreview()">
+      </div>
+      <div class="mt-16" id="setupPreviewBox"></div>
+    </div>
+
+    <button class="btn btn-primary btn-block" id="startBtn" onclick="startSection()">开始计时</button>`;
+  renderSubTypes();
+  setupPreview();
+}
+
+function pickSection(id) {
+  session = { mode:'section', sectionId:id, subType:null, questionCount:secById(id).count, timeMode:'countup' };
+  go('section-setup');
+}
+function renderSubTypes() {
+  if (!session) return;
+  const sec = secById(session.sectionId);
+  const row = $('#subTypeRow'); const chips = $('#subTypeChips');
+  if (!sec || !sec.subTypes.length) { row.classList.add('hidden'); return; }
+  row.classList.remove('hidden');
+  chips.innerHTML = sec.subTypes.map(st =>
+    `<button class="chip ${session.subType===st?'sel':''}" onclick="pickSubType('${esc(st)}')">${esc(st)}</button>`).join('');
+}
+function pickSubType(st) { if (session) { session.subType = session.subType===st ? null : st; renderSubTypes(); } }
+
+function setupPreview() {
+  if (!session) return;
+  const q = parseInt($('#qCount').value) || 0;
+  const mode = $('#timeMode').value;
+  session.questionCount = q; session.timeMode = mode;
+  const targetWrap = $('#targetWrap');
+  if (mode === 'countdown') {
+    targetWrap.classList.remove('hidden');
+    const defMin = refTimeFor(session.sectionId, q) / 60000;
+    $('#targetMin').value = Math.max(1, Math.round(defMin));
+  } else { targetWrap.classList.add('hidden'); }
+
+  const refMs = refTimeFor(session.sectionId, q);
+  const box = $('#setupPreviewBox');
+  if (q > 0) {
+    box.innerHTML = `<div class="row gap-8" style="font-size:13px;color:var(--text-2)">
+      <span class="pill pill-gray">${esc(secName(session.sectionId))}${session.subType?' · '+esc(session.subType):''}</span>
+      <span>参考时间 <b style="color:var(--text)">${fmtTime(refMs)}</b></span>
+      ${refPace(session.sectionId)!=null ? `<span>参考均速 <b style="color:var(--text)">${refPace(session.sectionId).toFixed(0)}s/题</b></span>` : ''}
+    </div>`;
+  } else box.innerHTML = '';
+}
+
+function startSection() {
+  if (!session || !session.sectionId) { toast('请先选择板块'); return; }
+  const q = parseInt($('#qCount').value) || 0;
+  if (q <= 0) { toast('题量需大于 0'); return; }
+  session.questionCount = q;
+  session.timeMode = $('#timeMode').value;
+  session.targetMs = session.timeMode === 'countdown'
+    ? Math.round(parseFloat($('#targetMin').value || '0') * 60 * 1000)
+    : refTimeFor(session.sectionId, q);
+  session.startAt = new Date().toISOString();
+  session.timer = new Timer();
+  session.timer.start();
+  session.paused = false;
+  session.done = false;
+  go('section-timer');
+}
+
+function renderSectionTimer(app) {
+  const s = session; const sec = secById(s.sectionId);
+  app.innerHTML = `
+    <div class="timer-hero">
+      <div class="timer-label">${esc(sec.name)}${s.subType?' · '+esc(s.subType):''} · ${s.questionCount} 题</div>
+      <div class="timer-num" id="bigNum"></div>
+      <div class="timer-meta" id="tMeta"></div>
+      <div class="progress hidden" id="tProgress"><i id="tProgressBar"></i></div>
+      <div class="row mt-32" style="justify-content:center;gap:12px">
+        <button class="btn" onclick="togglePause()" id="pauseBtn"></button>
+        <button class="btn btn-primary" onclick="finishSection()">结束</button>
+      </div>
+    </div>`;
+  tickSectionTimer();
+}
+
+function tickSectionTimer() {
+  const s = session; if (!s) return;
+  const el = s.timer.elapsed();
+  const mode = s.timeMode;
+  const remaining = mode === 'countdown' ? s.targetMs - el : null;
+  const overdue = remaining != null && remaining <= 0;
+  const overRef = el > refTimeFor(s.sectionId, s.questionCount);
+
+  const big = $('#bigNum'); if (!big) return;
+  big.textContent = fmtTime(overdue ? el : (remaining != null ? remaining : el));
+  big.className = 'timer-num' + (overdue ? ' overdue' : '');
+
+  $('#pauseBtn').textContent = s.paused ? '继续' : '暂停';
+
+  let meta;
+  if (mode === 'countdown') {
+    meta = overdue ? `已超时 <b>+${fmtTime(el - s.targetMs)}</b>` : `剩余目标 <b>${fmtTime(remaining)}</b>`;
+  } else {
+    meta = `已用 <b>${fmtTime(el)}</b> · 参考 <b>${fmtTime(refTimeFor(s.sectionId, s.questionCount))}</b>` +
+      (overRef ? ' <span class="pill pill-warn">超过参考时间</span>' : '');
+  }
+  $('#tMeta').innerHTML = meta;
+
+  const prog = $('#tProgress');
+  if (mode === 'countdown') {
+    prog.classList.remove('hidden');
+    const bar = $('#tProgressBar');
+    bar.style.width = Math.min(100, el/s.targetMs*100).toFixed(1) + '%';
+    bar.className = overdue ? 'over' : '';
+  } else {
+    prog.classList.add('hidden');
+  }
+}
+
+function togglePause() {
+  if (!session) return;
+  if (session.paused) {
+    if (session.mode === 'mock') { session.totalTimer.start(); session.segTimer.start(); }
+    else session.timer.start();
+    session.paused = false;
+  } else {
+    if (session.mode === 'mock') { session.totalTimer.pause(); session.segTimer.pause(); }
+    else session.timer.pause();
+    session.paused = true;
+  }
+  const btn = $('#pauseBtn');
+  if (btn) btn.textContent = session.paused ? '继续' : '暂停';
+  onTick();
+}
+
+function finishSection() {
+  session.timer.pause();
+  session.timeMs = session.timer.elapsed();
+  session.endAt = new Date().toISOString();
+  session.correct = null;
+  session.errorType = [];
+  session.note = '';
+  go('section-finish');
+}
+
+function renderSectionFinish(app) {
+  const s = session; const sec = secById(s.sectionId);
+  const el = s.timeMs; const refMs = refTimeFor(s.sectionId, s.questionCount);
+  const diff = el - refMs;
+  const pace = s.questionCount > 0 ? (el/1000)/s.questionCount : 0;
+
+  app.innerHTML = `
+    <div class="hero" style="padding-bottom:16px">
+      <div class="row mb-8"><button class="btn-ghost btn-sm" onclick="go('home')">← 返回</button></div>
+      <h1>${esc(sec.name)}${s.subType?' · '+esc(s.subType):''}</h1>
+      <div class="sub">${s.questionCount} 题</div>
+    </div>
+
+    <div class="card card-pad mb-16">
+      <div class="result-big">
+        <div class="val ${diff>0?'':''}">${fmtTime(el)}</div>
+        <div class="lbl">用时 · 参考 ${fmtTime(refMs)} · ${diff>0 ? `超时 ${fmtTime(diff)}` : `富余 ${fmtTime(-diff)}`}</div>
+      </div>
+    </div>
+
+    <div class="card card-pad mb-16">
+      <div class="section-title mb-16">3 · 记录正确率</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div><label class="fl">做对题数 <span style="color:var(--bad)">*</span></label>
+          <input type="number" id="correct" min="0" max="${s.questionCount}" placeholder="0-${s.questionCount}" oninput="clampCorrect(this, ${s.questionCount})"></div>
+        <div><label class="fl">正确率</label>
+          <div style="height:44px;display:flex;align-items:center;font-size:15px;color:var(--text-2)" id="accShow">—</div></div>
+      </div>
+      <div class="mt-16"><label class="fl">错因(选填,可多选)</label>
+        <div class="chip-row" id="errChips">${config.errorTypes.map(t =>
+          `<button class="chip" data-t="${esc(t)}" onclick="toggleErr(this,'${esc(t)}')">${esc(t)}</button>`).join('')}</div>
+      </div>
+      <div class="mt-16"><label class="fl">备注(选填)</label>
+        <textarea class="note-ta" id="note" placeholder="例如:图推第三题卡了3分钟……"></textarea></div>
+    </div>
+
+    <button class="btn btn-primary btn-block" id="saveBtn" onclick="saveSection()">保存记录</button>`;
+
+  const cEl = $('#correct'); const aEl = $('#accShow');
+  cEl.addEventListener('input', () => {
+    const c = parseInt(cEl.value);
+    if (!isNaN(c) && c >= 0 && c <= s.questionCount) {
+      aEl.textContent = (c/s.questionCount*100).toFixed(0) + '%';
+    } else aEl.textContent = '—';
+  });
+  cEl.focus();
+}
+
+function toggleErr(btn, t) {
+  if (!session) return;
+  const i = session.errorType.indexOf(t);
+  if (i >= 0) session.errorType.splice(i,1); else session.errorType.push(t);
+  btn.classList.toggle('sel', i < 0);
+}
+
+function clampCorrect(el, max) {
+  const v = parseInt(el.value);
+  if (isNaN(v)) return;
+  if (v < 0) el.value = 0;
+  else if (v > max) el.value = max;
+}
+
+function saveSection() {
+  const s = session;
+  const c = parseInt($('#correct').value);
+  if (isNaN(c) || c < 0 || c > s.questionCount) { toast('请填写正确的做对题数'); return; }
+  s.correct = c;
+  s.errorType = s.errorType || [];
+  s.note = ($('#note') || {}).value || '';
+
+  records.push({
+    id: uid(), type: 'section', date: new Date().toISOString(),
+    startAt: s.startAt || null, endAt: s.endAt || null,
+    sectionId: s.sectionId, subType: s.subType || null,
+    questionCount: s.questionCount, timeMs: Math.round(s.timeMs),
+    targetMs: Math.round(s.targetMs), correct: s.correct,
+    errorType: s.errorType, note: s.note,
+  });
+  saveRecords();
+  toast('已保存');
+  session = null;
+  go('home');
+}
+
+/* =====================================================================
+ * 套卷练习
+ * =================================================================== */
+function renderMockSetup(app) {
+  // 确保 mockOrder 含所有做题板块;涂卡可增删
+  const order = config.mockOrder.filter(id => secById(id));
+  app.innerHTML = `
+    <div class="hero" style="padding-bottom:16px">
+      <div class="row mb-8"><button class="btn-ghost btn-sm" onclick="go('home')">← 返回</button></div>
+      <h1>套卷练习</h1>
+      <div class="sub">自由排列做题顺序,每板块设目标时间,分段计时</div>
+    </div>
+
+    <div class="card card-pad mb-16">
+      <div class="row mb-8"><div class="section-title" style="flex:1">做题顺序</div>
+        <div class="muted-3" style="font-size:12px">拖动 ↑↓ 调整顺序</div></div>
+      <div class="seg-list" id="mockOrderList"></div>
+      <div class="mt-16"><button class="btn btn-sm" onclick="addTukaSeg()">+ 加入涂卡环节</button></div>
+    </div>
+
+    <div class="card card-pad mb-16">
+      <div class="section-title mb-8">总时长</div>
+      <div style="display:flex;align-items:baseline;gap:8px">
+        <input type="number" id="mockTotal" value="${config.totalMinutes}" min="1" style="width:100px" oninput="mockSetupSummary()"> <span class="muted">分钟</span>
+        <span class="muted-3" style="margin-left:8px" id="mockTotalSec"></span>
+      </div>
+      <div class="mt-8 muted" style="font-size:13px" id="mockSumPill"></div>
+    </div>
+
+    <button class="btn btn-primary btn-block" onclick="startMock()">开始套卷计时</button>`;
+  renderMockOrder();
+  mockSetupSummary();
+}
+
+function renderMockOrder() {
+  const list = $('#mockOrderList');
+  list.innerHTML = config.mockOrder.map((id, i) => {
+    const sec = secById(id); if (!sec) return '';
+    return `<div class="seg-input" data-id="${id}">
+      <div class="nm" style="font-size:14px"><span class="muted-3" style="font-size:12px">${i+1}.</span> ${esc(sec.name)}${sec.isTuka?'<span class="muted-3" style="font-size:11px"> (涂卡)</span>':''}</div>
+      <input type="number" class="hide-sm" value="${sec.count}" min="${sec.isTuka?0:1}" onchange="mockSegCount('${id}',this.value)" title="题量">
+      <input type="number" value="${sec.minutes}" min="0" onchange="mockSegMin('${id}',this.value)" title="目标分钟">
+      <div class="row gap-8" style="justify-content:flex-end">
+        ${i>0 ? `<button class="drag-btn" onclick="mockMove('${id}',-1)" title="上移">↑</button>` : '<span></span>'}
+        ${i<config.mockOrder.length-1 ? `<button class="drag-btn" onclick="mockMove('${id}',1)" title="下移">↓</button>` : '<span></span>'}
+        ${!sec.isTuka ? `<button class="drag-btn" onclick="mockRemove('${id}')" title="移除">×</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+  mockSetupSummary();
+}
+
+function mockSegCount(id, v) { const s = secById(id); if (s) s.count = Math.max(s.isTuka?0:1, parseInt(v)||0); }
+function mockSegMin(id, v) { const s = secById(id); if (s) s.minutes = Math.max(0, parseInt(v)||0); }
+function mockMove(id, dir) {
+  const i = config.mockOrder.indexOf(id);
+  const j = i + dir;
+  if (j < 0 || j >= config.mockOrder.length) return;
+  [config.mockOrder[i], config.mockOrder[j]] = [config.mockOrder[j], config.mockOrder[i]];
+  renderMockOrder();
+}
+function mockRemove(id) { config.mockOrder = config.mockOrder.filter(x => x !== id); renderMockOrder(); }
+function addTukaSeg() {
+  if (!config.mockOrder.includes('tuka')) config.mockOrder.push('tuka');
+  renderMockOrder();
+}
+
+function mockSetupSummary() {
+  const totalMin = parseInt($('#mockTotal').value) || config.totalMinutes;
+  const sumMin = config.mockOrder.reduce((a,id) => a + (secById(id)?.minutes || 0), 0);
+  const sumQ = config.mockOrder.reduce((a,id) => a + (secById(id)?.count || 0), 0);
+  $('#mockTotalSec').textContent = `= ${totalMin*60} 秒`;
+  const diff = totalMin - sumMin;
+  $('#mockSumPill').innerHTML = `板块合计 <b>${sumMin} 分 · ${sumQ} 题</b>`;
+  if (diff > 0) $('#mockSumPill').innerHTML += ` · <span class="pill pill-ok">富余 ${diff} 分(机动)</span>`;
+  else if (diff < 0) $('#mockSumPill').innerHTML += ` · <span class="pill pill-bad">超出 ${-diff} 分</span>`;
+}
+
+function startMock() {
+  const totalMin = parseInt($('#mockTotal').value) || config.totalMinutes;
+  const segs = config.mockOrder.map(id => {
+    const s = secById(id);
+    return { sectionId:id, questionCount:s.count, targetMs:s.minutes*60*1000, timeMs:0, correct:null };
+  });
+  if (!segs.length) { toast('请至少保留一个板块'); return; }
+  session = {
+    mode:'mock', segs, cur:0, totalTargetMs: totalMin*60*1000,
+    totalTimer: new Timer(), segTimer: new Timer(),
+    paused:false,
+  };
+  session.startAt = new Date().toISOString();
+  session.totalTimer.start(); session.segTimer.start();
+  go('mock-timer');
+}
+
+function renderMockTimer(app) {
+  const s = session;
+  const isLast = s.cur === s.segs.length - 1;
+  app.innerHTML = `
+    <div class="timer-hero">
+      <div class="timer-label" id="segLabel"></div>
+      <div class="timer-num" id="bigNum"></div>
+      <div class="timer-meta" id="tMeta"></div>
+      <div class="progress"><i id="tProgressBar"></i></div>
+
+      <div class="mt-24" style="text-align:left">
+        <div class="row" style="justify-content:space-between;padding:0 2px">
+          <div>
+            <div style="font-size:13px;color:var(--text-2)">当前板块</div>
+            <div style="font-size:20px;font-weight:650" id="segName"></div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:13px;color:var(--text-2)">本板块用时</div>
+            <div id="segTime" style="font-size:20px;font-weight:600;font-family:var(--mono)"></div>
+          </div>
+        </div>
+        <div id="segWarn" class="mt-8"></div>
+      </div>
+
+      <div class="row mt-24" style="justify-content:center;gap:12px">
+        <button class="btn" onclick="togglePause()" id="pauseBtn"></button>
+        ${!isLast ? `<button class="btn btn-primary" onclick="mockNextSeg()">下一板块 →</button>` : `<button class="btn btn-primary" onclick="finishMock()">结束整卷</button>`}
+      </div>
+      ${!isLast ? `<button class="btn btn-ghost btn-sm mt-8" onclick="finishMock()">提前结束</button>` : ''}
+    </div>
+
+    <div class="mt-24 mb-16"><div class="section-title mb-8">分段进度</div></div>
+    <div class="seg-list" id="segList"></div>`;
+  tickMockTimer();
+}
+
+function tickMockTimer() {
+  const s = session; if (!s) return;
+  const totalEl = s.totalTimer.elapsed();
+  const totalRemaining = s.totalTargetMs - totalEl;
+  const totalOver = totalRemaining <= 0;
+  const seg = s.segs[s.cur];
+  const segEl = s.segTimer.elapsed();
+  const segOver = segEl > seg.targetMs;
+
+  const big = $('#bigNum'); if (!big) return;
+  big.textContent = fmtTime(totalOver ? totalEl : totalRemaining);
+  big.className = 'timer-num' + (totalOver ? ' overdue' : '');
+  $('#tMeta').innerHTML = totalOver ? `整卷已超时 <b>+${fmtTime(-totalRemaining)}</b>` : `整卷剩余 <b>${fmtTime(totalRemaining)}</b>`;
+  $('#tProgressBar').style.width = Math.min(100, totalEl/s.totalTargetMs*100).toFixed(1) + '%';
+  $('#tProgressBar').className = totalOver ? 'over' : '';
+  $('#segLabel').textContent = `套卷 · 第 ${s.cur+1}/${s.segs.length} 板块`;
+  $('#segName').innerHTML = `${esc(secName(seg.sectionId))} <span class="muted-3" style="font-size:13px;font-weight:400">${seg.questionCount} 题</span>`;
+  $('#segTime').innerHTML = `<span style="${segOver?'color:var(--bad)':''}">${fmtTime(segEl)}</span> <span class="muted-3" style="font-size:12px;font-weight:400">/ ${fmtTime(seg.targetMs)}</span>`;
+  $('#segWarn').innerHTML = segOver ? `<span class="pill pill-bad">本板块已超参考时间</span>` : '';
+  $('#pauseBtn').textContent = s.paused ? '继续' : '暂停';
+
+  $('#segList').innerHTML = s.segs.map((g, i) => {
+    let cls = '';
+    if (i < s.cur) cls = 'done';
+    else if (i === s.cur) cls = 'cur';
+    const mark = i < s.cur ? '✓' : (i === s.cur ? '▶' : (i+1));
+    const t = i < s.cur ? fmtTime(g.timeMs) : (i === s.cur ? fmtTime(segEl) : fmtTime(g.targetMs));
+    return `<div class="seg-item ${cls}">
+      <span class="gi">${mark}</span>
+      <span class="nm">${esc(secName(g.sectionId))}</span>
+      <span class="tm">${t}</span>
+    </div>`;
+  }).join('');
+}
+
+function mockNextSeg() {
+  const s = session;
+  // 结算当前段
+  s.segs[s.cur].timeMs = Math.round(s.segTimer.elapsed());
+  s.cur++;
+  if (s.cur >= s.segs.length) { finishMock(); return; }
+  s.segTimer = new Timer(); s.segTimer.start();
+  render();
+}
+
+function finishMock() {
+  const s = session;
+  // 结算当前段(若尚未结算)
+  const cur = s.segs[s.cur];
+  if (cur && !cur.timeMs) cur.timeMs = Math.round(s.segTimer.elapsed());
+  s.totalTimer.pause(); s.segTimer.pause();
+  s.totalMs = s.totalTimer.elapsed();
+  s.endAt = new Date().toISOString();
+  go('mock-finish');
+}
+
+function renderMockFinish(app) {
+  const s = session;
+  const rows = s.segs.map((g, i) => {
+    const ref = g.targetMs;
+    const diff = g.timeMs - ref;
+    const isTuka = g.questionCount <= 0;
+    return `<div class="finish-seg">
+      <div class="nm">${esc(secName(g.sectionId))}
+        <div class="meta">${isTuka ? '涂卡' : g.questionCount+' 题'} · 用时 ${fmtTime(g.timeMs)} · 参考 ${fmtTime(ref)} · ${diff>0?'超 '+fmtTime(diff):'余 '+fmtTime(-diff)}</div></div>
+      ${isTuka ? '<div class="muted-3" style="font-size:13px;text-align:right">—</div>' : `<input type="number" placeholder="做对 ${g.questionCount} 题" min="0" max="${g.questionCount}" onchange="mockSegCorrect(${i},this.value)">`}
+    </div>`;
+  }).join('');
+
+  app.innerHTML = `
+    <div class="hero" style="padding-bottom:16px">
+      <div class="row mb-8"><button class="btn-ghost btn-sm" onclick="go('home')">← 返回</button></div>
+      <h1>套卷完成</h1>
+      <div class="sub">整卷用时 ${fmtTime(s.totalMs)} · 目标 ${fmtTime(s.totalTargetMs)} · ${s.totalMs>s.totalTargetMs?'超时 '+fmtTime(s.totalMs-s.totalTargetMs):'富余 '+fmtTime(s.totalTargetMs-s.totalMs)}</div>
+    </div>
+
+    <div class="card card-pad mb-16">
+      <div class="section-title mb-16">各板块正确率(可空)</div>
+      ${rows}
+    </div>
+
+    <button class="btn btn-primary btn-block" onclick="saveMock()">保存记录</button>`;
+}
+
+function mockSegCorrect(i, v) {
+  const g = session.segs[i];
+  let c = parseInt(v);
+  if (!isNaN(c)) c = Math.max(0, Math.min(c, g.questionCount));
+  g.correct = (!isNaN(c) && c >= 0) ? c : null;
+}
+
+function saveMock() {
+  const s = session;
+  records.push({
+    id: uid(), type:'mock', date: new Date().toISOString(),
+    startAt: s.startAt || null, endAt: s.endAt || null,
+    timeMs: Math.round(s.totalMs), targetMs: Math.round(s.totalTargetMs),
+    segments: s.segs.map(g => ({
+      sectionId: g.sectionId, questionCount: g.questionCount,
+      timeMs: g.timeMs, targetMs: g.targetMs, correct: g.correct != null ? g.correct : null,
+    })),
+  });
+  saveRecords();
+  toast('已保存');
+  session = null;
+  go('home');
+}
+
+/* =====================================================================
+ * 设置
+ * =================================================================== */
+function renderSettings(app) {
+  const rows = config.sections.map((s, i) => `
+    <div class="seg-input" data-id="${s.id}">
+      <div class="nm"><input type="text" value="${esc(s.name)}" onchange="cfgName('${s.id}',this.value)"></div>
+      <input type="number" class="hide-sm" value="${s.count}" min="${s.isTuka?0:1}" onchange="cfgCount('${s.id}',this.value)" title="题量">
+      <input type="number" value="${s.minutes}" min="0" onchange="cfgMin('${s.id}',this.value)" title="目标分钟">
+      <span class="muted-3" style="font-size:12px">${s.count>0 ? (s.minutes*60/s.count).toFixed(0)+'s/题' : '—'}</span>
+    </div>`).join('');
+
+  const subTypeRows = config.sections.filter(s => s.subTypes.length || !s.isTuka).map(s => `
+    <div class="mb-16">
+      <label class="fl">${esc(s.name)} · 二级题型</label>
+      <input type="text" value="${esc(s.subTypes.join('、'))}" placeholder="用顿号、分隔,留空则不分"
+        onchange="cfgSubTypes('${s.id}',this.value)">
+    </div>`).join('');
+
+  app.innerHTML = `
+    <div class="hero" style="padding-bottom:16px">
+      <div class="row mb-8"><button class="btn-ghost btn-sm" onclick="go('home')">← 返回</button></div>
+      <h1>设置</h1>
+      <div class="sub">所有时间、题量、板块均可自定义</div>
+    </div>
+
+    <div class="card card-pad mb-16">
+      <div class="section-title mb-16">板块 · 题量 · 目标时间</div>
+      <div class="mb-8" style="display:grid;grid-template-columns:1fr 96px 96px 60px;gap:8px;font-size:11px;color:var(--text-3)" id="cfgHead">
+        <span>板块</span><span class="hide-sm">题量</span><span>分钟</span><span>均速</span>
+      </div>
+      ${rows}
+    </div>
+
+    <div class="card card-pad mb-16">
+      <div class="section-title mb-16">二级题型</div>
+      ${subTypeRows}
+    </div>
+
+    <div class="card card-pad mb-16">
+      <div class="section-title mb-16">诊断参数</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div><label class="fl">目标正确率(%)</label>
+          <input type="number" id="targetAcc" value="${config.targetAccuracy}" min="0" max="100"></div>
+        <div><label class="fl">套卷总时长(分钟)</label>
+          <input type="number" id="totalMinutes" value="${config.totalMinutes}" min="1"></div>
+        <div style="grid-column:1/-1"><label class="fl">错因选项(顿号分隔)</label>
+          <input type="text" id="errTypes" value="${esc(config.errorTypes.join('、'))}"></div>
+      </div>
+    </div>
+
+    <div class="row gap-8">
+      <button class="btn btn-primary" style="flex:1" onclick="saveSettings()">保存设置</button>
+      <button class="btn" onclick="resetConfig()">恢复默认</button>
+    </div>`;
+}
+
+function cfgName(id, v) { const s = secById(id); if (s) s.name = v.trim() || s.name; }
+function cfgCount(id, v) { const s = secById(id); if (s) s.count = Math.max(s.isTuka?0:1, parseInt(v)||0); }
+function cfgMin(id, v) { const s = secById(id); if (s) s.minutes = Math.max(0, parseInt(v)||0); }
+function cfgSubTypes(id, v) {
+  const s = secById(id); if (!s) return;
+  s.subTypes = v.split(/[、,，]/).map(x => x.trim()).filter(Boolean);
+}
+
+function saveSettings() {
+  const acc = parseInt($('#targetAcc').value);
+  if (!isNaN(acc) && acc >= 0 && acc <= 100) config.targetAccuracy = acc;
+  const et = $('#errTypes').value.split(/[、,，]/).map(x => x.trim()).filter(Boolean);
+  if (et.length) config.errorTypes = et;
+  const tm = parseInt($('#totalMinutes').value);
+  if (!isNaN(tm) && tm > 0) config.totalMinutes = tm;
+  // 同步 mockOrder 中可能被删的板块
+  config.mockOrder = config.mockOrder.filter(id => secById(id));
+  saveConfig();
+  toast('已保存');
+  go('home');
+}
+function resetConfig() {
+  if (!confirm('恢复默认设置?将清空你自定义的板块/时间/题量。')) return;
+  config = structuredClone(DEFAULT_CONFIG);
+  saveConfig();
+  go('settings');
+}
+
+/* =====================================================================
+ * 导出 / 导入
+ * =================================================================== */
+function exportData() {
+  const payload = {
+    app: 'xctimer', version: 1, exportedAt: new Date().toISOString(),
+    config, records,
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `行测计时器备份_${todayKey()}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  toast('已导出 JSON');
+}
+
+function importData(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      if (!data || !Array.isArray(data.records)) { toast('文件格式不正确'); return; }
+      // 合并记录(按 id 去重),恢复配置
+      const existing = new Set(records.map(r => r.id));
+      let added = 0;
+      for (const r of data.records) if (!existing.has(r.id)) { records.push(r); added++; }
+      if (data.config) config = Object.assign(structuredClone(DEFAULT_CONFIG), data.config);
+      saveRecords(); saveConfig();
+      toast(`导入完成,新增 ${added} 条记录`);
+      go('home');
+    } catch (e) { toast('导入失败:' + e.message); }
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+/* =====================================================================
+ * 启动
+ * =================================================================== */
+render();
+</script>
+</body>
+</html>
