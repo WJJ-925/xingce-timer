@@ -51,7 +51,7 @@
     max-width: 880px; margin: 0 auto; padding: 14px 20px;
     display: flex; align-items: center; gap: 12px;
   }
-  .brand { font-size: 15px; font-weight: 650; letter-spacing: -.01em; cursor: pointer; }
+  .brand { font-size: 15px; font-weight: 650; letter-spacing: -.01em; cursor: pointer; white-space: nowrap; }
   .brand .dot { color: var(--accent); }
   .topbar .spacer { flex: 1; }
   .today-pill {
@@ -65,6 +65,11 @@
     transition: all .15s; font-family: var(--font);
   }
   .icon-btn:hover { border-color: var(--text-3); color: var(--text); }
+  @media (max-width: 560px) {
+    .topbar-inner { padding: 10px; gap: 6px; }
+    .today-pill { display: none; }
+    .icon-btn { padding: 0 8px; font-size: 12px; }
+  }
 
   /* ===== 通用 ===== */
   h1 { font-size: 26px; font-weight: 680; letter-spacing: -.02em; }
@@ -110,7 +115,7 @@
 
   /* ===== 首页 ===== */
   .hero { padding: 40px 0 8px; }
-  .hero h1 { font-size: 34px; font-weight: 700; letter-spacing: -.03em; }
+  .hero h1 { font-size: 34px; font-weight: 700; letter-spacing: -.03em; text-wrap: balance; }
   .hero .sub { color: var(--text-2); font-size: 15px; margin-top: 6px; }
   .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   @media (max-width: 560px) { .mode-grid { grid-template-columns: 1fr; } }
@@ -178,7 +183,7 @@
 
   /* ===== 表单 ===== */
   label.fl { display: block; font-size: 12px; color: var(--text-2); margin-bottom: 6px; font-weight: 550; }
-  input[type=number], input[type=text], select {
+  input[type=number], input[type=text], input[type=date], select {
     width: 100%; height: 44px; padding: 0 14px; border: 1px solid var(--border);
     border-radius: 12px; font-size: 15px; font-family: var(--font); color: var(--text);
     background: var(--card); transition: border-color .15s; outline: none;
@@ -241,6 +246,166 @@
   }
   .stat .l { font-size: 12px; color: var(--text-3); margin-top: 2px; }
 
+  /* ===== 今日计划 ===== */
+  .plan-card { --plan-x: 24px; padding: 0; overflow: hidden; }
+  .plan-top {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: 16px; padding: 22px var(--plan-x) 0;
+  }
+  .plan-eyebrow {
+    font-size: 10.5px; font-weight: 650; letter-spacing: .13em;
+    color: var(--text-3); text-transform: uppercase;
+  }
+  .plan-title { font-size: 19px; font-weight: 680; letter-spacing: -.015em; margin-top: 5px; }
+  .exam-chip {
+    display: inline-flex; align-items: baseline; gap: 4px; flex-shrink: 0;
+    background: var(--accent-soft); color: var(--accent-ink);
+    border-radius: 999px; padding: 7px 13px; font-size: 12px; white-space: nowrap;
+  }
+  .exam-chip b {
+    font-family: var(--mono); font-size: 17px; font-weight: 600;
+    letter-spacing: -.02em; font-variant-numeric: tabular-nums;
+  }
+  .exam-chip.dim { background: var(--bg); color: var(--text-3); }
+  .exam-chip.hot { background: var(--warn-soft); color: var(--warn); }
+  .plan-progress { display: flex; align-items: center; gap: 12px; padding: 16px var(--plan-x) 0; }
+  .plan-bar {
+    flex: 1; height: 4px; border-radius: 99px;
+    background: var(--border-soft); overflow: hidden;
+  }
+  .plan-bar i {
+    display: block; height: 100%; border-radius: inherit;
+    background: linear-gradient(90deg, #6366f1, var(--accent));
+    transition: width .35s cubic-bezier(.4,0,.2,1);
+  }
+  .plan-progress-text {
+    font-size: 11.5px; color: var(--text-3); white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .plan-progress.all-done .plan-bar i { background: var(--ok); }
+  .plan-progress.all-done .plan-progress-text { color: var(--ok); font-weight: 550; }
+  .plan-list { display: flex; flex-direction: column; gap: 8px; margin: 14px var(--plan-x) 0; }
+  .plan-item {
+    display: flex; align-items: center; gap: 11px; padding: 10px 12px;
+    border: 1px solid transparent; border-radius: 12px; background: #fafaf8;
+    transition: background .15s, border-color .15s;
+  }
+  .plan-item:hover { background: #f4f4f1; }
+  .plan-item:focus-within { background: var(--card); border-color: var(--border); }
+  .plan-item.done { background: #f7f9f8; }
+  .plan-check {
+    width: 21px; height: 21px; border-radius: 50%; border: 1.5px solid #d4d4d8;
+    background: var(--card); color: #fff; font-size: 11px; cursor: pointer; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; padding: 0;
+    transition: all .18s;
+  }
+  .plan-check:hover { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .plan-item.done .plan-check { background: var(--ok); border-color: var(--ok); }
+  input.plan-text {
+    flex: 1; min-width: 0; height: auto; padding: 0; border: none; background: transparent;
+    font-size: 14px; color: var(--text); box-shadow: none; outline: none;
+  }
+  input.plan-text:focus { border: none; box-shadow: none; }
+  .plan-item.done input.plan-text { color: var(--text-3); text-decoration: line-through; }
+  .plan-del {
+    width: 24px; height: 24px; border: none; border-radius: 50%; background: transparent;
+    color: var(--text-3); font-size: 15px; line-height: 1; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity .15s, background .15s, color .15s; flex-shrink: 0;
+  }
+  .plan-item:hover .plan-del { opacity: 1; }
+  .plan-del:hover { background: var(--bad-soft); color: var(--bad); }
+  @media (max-width: 560px) { .plan-del { opacity: .55; } }   /* 触屏没有 hover,删除按钮常显 */
+  .plan-empty { padding: 30px var(--plan-x) 20px; text-align: center; }
+  .plan-empty b { display: block; font-size: 13.5px; font-weight: 550; color: var(--text-2); }
+  .plan-empty span { display: block; margin-top: 4px; font-size: 12px; color: var(--text-3); }
+  .plan-add {
+    display: flex; align-items: center; gap: 8px; margin: 12px var(--plan-x) 0;
+    padding: 4px 4px 4px 13px; border: 1px solid transparent; border-radius: 12px;
+    background: var(--bg); transition: background .15s, border-color .15s;
+  }
+  .plan-add:focus-within { background: var(--card); border-color: var(--border); }
+  .plan-add-icon { color: var(--text-3); font-size: 15px; line-height: 1; }
+  input.plan-new {
+    flex: 1; min-width: 0; height: 34px; padding: 0; border: none;
+    background: transparent; box-shadow: none; font-size: 13px;
+  }
+  input.plan-new:focus { border: none; box-shadow: none; }
+  .plan-add-btn {
+    height: 30px; padding: 0 13px; border: none; border-radius: 9px;
+    background: var(--accent); color: #fff; font-size: 12.5px; font-weight: 550;
+    cursor: pointer; transition: background .15s; flex-shrink: 0;
+  }
+  .plan-add-btn:hover { background: var(--accent-ink); }
+  .plan-suggest {
+    display: flex; align-items: center; gap: 8px; margin: 10px var(--plan-x) 0;
+    padding: 9px 10px 9px 12px; border: 1px solid var(--border-soft);
+    border-radius: 12px; background: var(--card); font-size: 12px; color: var(--text-2);
+  }
+  .sug-tag {
+    flex-shrink: 0; font-size: 10.5px; font-weight: 600; color: var(--accent-ink);
+    background: var(--accent-soft); border-radius: 6px; padding: 2px 6px;
+  }
+  .sug-text { flex: 1; min-width: 0; }
+  .sug-add {
+    flex-shrink: 0; height: 26px; padding: 0 10px; border: 1px solid var(--border);
+    border-radius: 8px; background: var(--card); color: var(--text); font-size: 12px;
+    cursor: pointer; transition: all .15s;
+  }
+  .sug-add:hover { border-color: var(--accent); color: var(--accent-ink); }
+  .week-strip {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+    margin: 18px var(--plan-x) 0; padding-top: 16px; border-top: 1px solid var(--border-soft);
+  }
+  .week-day { text-align: center; padding: 2px 0; }
+  .week-day .wd-label { display: block; font-size: 10.5px; color: var(--text-3); margin-bottom: 7px; }
+  .week-day .wd-dot {
+    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    background: #dededb;
+  }
+  .week-day.done .wd-dot { background: var(--accent); }
+  .week-day.today .wd-label { color: var(--accent-ink); font-weight: 650; }
+  .week-day.today:not(.done) .wd-dot {
+    background: var(--card); border: 1.5px solid var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .week-day.today.done .wd-dot { box-shadow: 0 0 0 3px var(--accent-soft); }
+  .week-day.future { opacity: .4; }
+  .plan-foot {
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px;
+    margin: 16px var(--plan-x) 0; padding: 14px 0 20px;
+    font-size: 11.5px; color: var(--text-3);
+  }
+  @media (max-width: 560px) { .plan-card { --plan-x: 18px; } }
+
+  /* ===== 热力图 ===== */
+  .heat-grid { display: flex; gap: 3px; overflow-x: auto; padding-bottom: 2px; }
+  .heat-col { display: flex; flex-direction: column; gap: 3px; flex-shrink: 0; }
+  .heat-cell { width: 12px; height: 12px; border-radius: 3px; background: #f0f0ee; display: inline-block; vertical-align: middle; }
+  .heat-cell.lv1 { background: #dbe0ff; }
+  .heat-cell.lv2 { background: #b6bdfb; }
+  .heat-cell.lv3 { background: #7c84f2; }
+  .heat-cell.lv4 { background: #4f46e5; }
+  .heat-cell.future { background: transparent; }
+  .heat-legend { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; font-size: 11px; color: var(--text-3); flex-wrap: wrap; gap: 6px; }
+  .heat-scale { display: inline-flex; align-items: center; gap: 3px; }
+
+  /* ===== 成就墙 ===== */
+  .ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; }
+  .ach {
+    border: 1px solid var(--border-soft); border-radius: 12px; padding: 12px 10px; text-align: center;
+    background: #fcfcfb; opacity: .42; filter: grayscale(1); transition: all .2s;
+  }
+  .ach.on { opacity: 1; filter: none; background: var(--card); border-color: var(--border); }
+  .ach-ico {
+    width: 34px; height: 34px; margin: 0 auto 8px; border-radius: 50%; background: var(--border-soft);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 650; color: var(--text-2);
+  }
+  .ach.on .ach-ico { background: var(--accent-soft); color: var(--accent-ink); }
+  .ach-name { font-size: 12.5px; font-weight: 600; }
+  .ach-desc { font-size: 10.5px; color: var(--text-3); margin-top: 3px; line-height: 1.35; }
+
   .hidden { display: none !important; }
 </style>
 </head>
@@ -269,11 +434,15 @@
  * =================================================================== */
 const LS_RECORDS = 'xctimer_records_v1';
 const LS_CONFIG  = 'xctimer_config_v1';
+const LS_PLANS   = 'xctimer_plans_v1';
 
 const DEFAULT_CONFIG = {
   totalMinutes: 120,
   targetAccuracy: 75,          // 目标正确率 %
   errorTypes: ['知识点不会', '粗心失误', '时间不够', '蒙的'],
+  examName: '2027 国考',
+  examDate: '2026-11-29',      // 考试日期,可改
+  weeklyGoalDays: 5,           // 每周目标练习天数
   // 板块: id, name, count(默认题量), minutes(目标时间), subTypes(可选), isTuka(零题量环节)
   sections: [
     { id:'ziliao',   name:'资料分析',   count:20, minutes:25, subTypes:[] },
@@ -311,6 +480,101 @@ function saveRecords() { localStorage.setItem(LS_RECORDS, JSON.stringify(records
 
 let config = loadConfig();
 let records = loadRecords();
+
+/* ----- 每日计划清单(按天保存,可增删改) ----- */
+function loadPlans() {
+  try { return JSON.parse(localStorage.getItem(LS_PLANS)) || {}; } catch (e) { return {}; }
+}
+let plans = loadPlans();
+function savePlans() {
+  // 只保留最近 60 天,避免无限增长
+  const keys = Object.keys(plans).sort();
+  if (keys.length > 60) keys.slice(0, keys.length - 60).forEach(k => delete plans[k]);
+  localStorage.setItem(LS_PLANS, JSON.stringify(plans));
+}
+function getTodayPlan() { return plans[todayKey()] || []; }
+function pushPlanItem(text) {
+  const k = todayKey();
+  (plans[k] = plans[k] || []).push({ id: uid(), text, done: false });
+  savePlans();
+}
+
+/* =====================================================================
+ * 成就
+ * =================================================================== */
+const ACHIEVEMENTS = [
+  { id:'first',    ico:'初', name:'初次打卡',   desc:'完成第一组练习',                     check: c => c.count >= 1 },
+  { id:'ten',      ico:'十', name:'十组起步',   desc:'累计练习 10 组',                      check: c => c.count >= 10 },
+  { id:'fifty',    ico:'五', name:'五十组',     desc:'累计练习 50 组',                      check: c => c.count >= 50 },
+  { id:'hundred',  ico:'百', name:'百组里程碑', desc:'累计练习 100 组',                     check: c => c.count >= 100 },
+  { id:'mock1',    ico:'套', name:'首战套卷',   desc:'完成第一次套卷',                      check: c => c.mockCount >= 1 },
+  { id:'mock5',    ico:'卷', name:'套卷老手',   desc:'完成 5 次套卷',                       check: c => c.mockCount >= 5 },
+  { id:'mocktime', ico:'稳', name:'稳稳当当',   desc:'套卷在目标时间内完成',                check: c => c.mockInTime },
+  { id:'perfect',  ico:'全', name:'全对一次',   desc:'单组 ≥5 题全部做对',                  check: c => c.perfect },
+  { id:'fast',     ico:'快', name:'快枪手',     desc:'单组 ≥10 题,均速比参考快 10%',        check: c => c.fast },
+  { id:'ontarget', ico:'达', name:'稳准狠',     desc:'单组 ≥10 题,按时完成且正确率 ≥85%',   check: c => c.ontarget },
+  { id:'streak3',  ico:'3',  name:'三日不辍',   desc:'连续练习 3 天',                       check: c => c.streakLongest >= 3 },
+  { id:'streak7',  ico:'7',  name:'一周不断',   desc:'连续练习 7 天',                       check: c => c.streakLongest >= 7 },
+  { id:'streak14', ico:'14', name:'半月苦修',   desc:'连续练习 14 天',                      check: c => c.streakLongest >= 14 },
+  { id:'tenhours', ico:'时', name:'十小时',     desc:'累计练习满 10 小时',                  check: c => c.totalMs >= 10 * 3600 * 1000 },
+  { id:'q1000',    ico:'千', name:'千题斩',     desc:'累计做满 1000 题',                    check: c => c.totalQ >= 1000 },
+  { id:'allround', ico:'遍', name:'全板块开荒', desc:'每个板块都练过至少一组',              check: c => c.allround },
+  { id:'early',    ico:'早', name:'早起鸟',     desc:'早上 7 点前开始练习',                 check: c => c.early },
+  { id:'night',    ico:'夜', name:'夜猫子',     desc:'晚上 11 点后开始练习',                check: c => c.night },
+];
+
+// 汇总成就所需的全部指标
+function achContext() {
+  const ctx = {
+    count: records.length, totalMs: 0, totalQ: 0, mockCount: 0,
+    mockInTime: false, perfect: false, fast: false, ontarget: false,
+    early: false, night: false, allround: false,
+    streakLongest: streakInfo().longest,
+    practiced: {},
+  };
+
+  // 一条练习(专项整组,或套卷中的一段)
+  function feed(sectionId, timeMs, qcount, correct) {
+    const sec = secById(sectionId);
+    if (sec && !sec.isTuka) ctx.practiced[sectionId] = true;
+    if (!qcount || qcount <= 0 || !timeMs || timeMs <= 0) return;
+    ctx.totalQ += qcount;
+    const ref = refTimeFor(sectionId, qcount);
+    const acc = correct != null ? correct / qcount : null;
+    if (qcount >= 5 && acc === 1) ctx.perfect = true;
+    if (qcount >= 10 && ref > 0) {
+      if (timeMs <= ref * 0.9) ctx.fast = true;
+      if (timeMs <= ref && acc != null && acc >= 0.85) ctx.ontarget = true;
+    }
+  }
+
+  for (const r of records) {
+    ctx.totalMs += (r.timeMs || 0);
+    const h = new Date(r.startAt || r.date).getHours();
+    if (h < 7) ctx.early = true;
+    if (h >= 23) ctx.night = true;
+    if (r.type === 'section') {
+      feed(r.sectionId, r.timeMs, r.questionCount, r.correct);
+    } else if (r.type === 'mock') {
+      ctx.mockCount++;
+      if (r.timeMs && r.targetMs && r.timeMs <= r.targetMs) ctx.mockInTime = true;
+      for (const g of (r.segments || [])) feed(g.sectionId, g.timeMs, g.questionCount, g.correct);
+    }
+  }
+
+  const real = config.sections.filter(s => !s.isTuka);
+  ctx.allround = real.length > 0 && real.every(s => ctx.practiced[s.id]);
+  return ctx;
+}
+function unlockedSet() {
+  const ctx = achContext();
+  return new Set(ACHIEVEMENTS.filter(a => a.check(ctx)).map(a => a.id));
+}
+// 保存记录后对比,返回本次新解锁的成就
+function newlyUnlocked(before) {
+  const now = unlockedSet();
+  return ACHIEVEMENTS.filter(a => now.has(a.id) && !before.has(a.id));
+}
 
 /* =====================================================================
  * 工具函数
@@ -351,6 +615,72 @@ function dayKeyOf(iso) {
 function todayKey() { return dayKeyOf(new Date().toISOString()); }
 // 一条记录归属哪一天(按开始时间,旧数据回退到保存时间)
 function recordDay(r) { return dayKeyOf(r.startAt || r.date); }
+
+/* ----- 日期 / 连续天数 / 周视图 ----- */
+function dateKey(d) {
+  const p = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+}
+function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
+function dayOrdinal(key) {
+  const [y,m,d] = key.split('-').map(Number);
+  return Math.round(Date.UTC(y, m-1, d) / 86400000);
+}
+function daysToExam() {
+  if (!config.examDate) return null;
+  const [y,m,d] = config.examDate.split('-').map(Number);
+  if (!y || !m || !d) return null;
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((new Date(y, m-1, d) - today) / 86400000);
+}
+// 每天练了多久(仅用于热力图)
+function practiceDayMap() {
+  const m = {};
+  for (const r of records) {
+    const k = recordDay(r);
+    m[k] = (m[k] || 0) + (r.timeMs || 0);
+  }
+  return m;
+}
+// 当前连续天数(今天还没练时从昨天起算)、历史最长、总天数
+function streakInfo() {
+  const dayMap = practiceDayMap();
+  const keys = Object.keys(dayMap);
+  const set = new Set(keys);
+  let cur = 0;
+  let d = new Date();
+  if (!set.has(dateKey(d))) d = addDays(d, -1);
+  while (set.has(dateKey(d))) { cur++; d = addDays(d, -1); }
+
+  let longest = 0, run = 0, prev = null;
+  const ords = keys.map(dayOrdinal).sort((a,b) => a-b);
+  for (const o of ords) {
+    if (prev != null && o === prev + 1) run++; else run = 1;
+    if (run > longest) longest = run;
+    prev = o;
+  }
+  return { cur, longest, totalDays: keys.length, practicedToday: set.has(todayKey()) };
+}
+// 本周一~周日,标记是否练习/今天/未来
+function weekDays() {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const dow = (today.getDay() + 6) % 7;      // 周一 = 0
+  const mon = addDays(today, -dow);
+  const labels = ['一','二','三','四','五','六','日'];
+  const dayMap = practiceDayMap();
+  return labels.map((label, i) => {
+    const d = addDays(mon, i);
+    const key = dateKey(d);
+    return {
+      key, label,
+      done: !!dayMap[key],
+      isToday: key === todayKey(),
+      future: d > today,
+    };
+  });
+}
 // 历史记录的开始~结束时间(旧数据无 startAt/endAt 时回退为保存时间)
 function timeRangeHtml(r) {
   if (r.startAt && r.endAt) return `${esc(fmtDate(r.startAt))} - ${esc(fmtClock(r.endAt))}`;
@@ -424,15 +754,161 @@ function render() {
 /* =====================================================================
  * 首页
  * =================================================================== */
-function renderHome(app) {
-  const stats = todayStats();
-  app.innerHTML = `
-    <div class="hero">
-      <h1>今天练了吗?</h1>
-      <div class="sub">${stats.count ? `已练 ${stats.count} 组 · 总时长 ${fmtMinSec(stats.ms)}` : '还没有记录,选一种模式开始'}</div>
+/* ----- 今日计划卡(清单式) ----- */
+// 根据诊断结果给出今天建议练的板块
+function suggestSectionId() {
+  const stats = sectionStats();
+  let best = null, bestScore = -1;
+  for (const s of config.sections) {
+    if (s.isTuka) continue;
+    const st = stats[s.id];
+    let score;
+    if (!st) score = 2;
+    else {
+      const avgPace = st.paceSum / st.n;
+      const acc = st.corTot > 0 ? (st.corN / st.corTot) * 100 : null;
+      const tag = classify(avgPace, refPace(s.id), acc, config.targetAccuracy);
+      score = tag ? ({ '重点攻克': 4, '需深耕': 3, '需提速': 3, '保持': 0 }[tag.label] || 1) : 1;
+      score += Math.max(0, 1 - st.n / 5) * 0.5;
+    }
+    if (score > bestScore) { bestScore = score; best = s.id; }
+  }
+  return best;
+}
+
+// 首页标题每天轮换一句
+const HOME_QUIP = '量变引起质变，你不练只会变质';
+
+function addPlanItem() {
+  const el = $('#planNew');
+  if (!el) return;
+  const t = (el.value || '').trim();
+  if (!t) return;
+  pushPlanItem(t);
+  render();
+  const ni = $('#planNew');
+  if (ni) ni.focus();
+}
+function addSuggestedPlan() {
+  const s = secById(suggestSectionId());
+  if (!s) return;
+  const text = `${s.name} ${s.count} 题 / ${s.minutes} 分`;
+  if (getTodayPlan().some(x => x.text === text)) { toast('已经在计划里了'); return; }
+  pushPlanItem(text);
+  toast('已加入今日计划');
+  render();
+}
+function togglePlanItem(id) {
+  const it = getTodayPlan().find(x => x.id === id);
+  if (!it) return;
+  it.done = !it.done;
+  savePlans();
+  render();
+}
+function renamePlanItem(id, v) {
+  const it = getTodayPlan().find(x => x.id === id);
+  if (!it) return;
+  const t = (v || '').trim();
+  if (!t) { render(); return; }     // 不允许改成空,空则还原
+  it.text = t;
+  savePlans();
+}
+function delPlanItem(id) {
+  const k = todayKey();
+  plans[k] = getTodayPlan().filter(x => x.id !== id);
+  savePlans();
+  render();
+}
+
+function renderPlanCard() {
+  const items = getTodayPlan();
+  const doneN = items.filter(i => i.done).length;
+  const allDone = items.length > 0 && doneN === items.length;
+  const pct = items.length ? Math.round(doneN / items.length * 100) : 0;
+  const sk = streakInfo();
+  const wk = weekDays();
+  const weekDone = wk.filter(d => d.done).length;
+  const wGoal = config.weeklyGoalDays || 0;
+  const dt = daysToExam();
+  const now = new Date();
+  const dateStr = `${now.getMonth()+1}月${now.getDate()}日 周${'日一二三四五六'[now.getDay()]}`;
+
+  let examHtml = '';
+  if (dt == null) {
+    examHtml = `<div class="exam-chip dim">设置考试日期</div>`;
+  } else if (dt > 0) {
+    examHtml = `<div class="exam-chip">距${esc(config.examName)} <b>${dt}</b> 天</div>`;
+  } else if (dt === 0) {
+    examHtml = `<div class="exam-chip hot">今天 · ${esc(config.examName)}</div>`;
+  } else {
+    examHtml = `<div class="exam-chip dim">${esc(config.examName)}已过 ${-dt} 天</div>`;
+  }
+
+  const list = items.length
+    ? `<div class="plan-list">${items.map(it => `
+        <div class="plan-item ${it.done ? 'done' : ''}">
+          <button class="plan-check" onclick="togglePlanItem('${it.id}')" aria-label="标记完成">${it.done ? '✓' : ''}</button>
+          <input class="plan-text" value="${esc(it.text)}" onchange="renamePlanItem('${it.id}',this.value)" spellcheck="false">
+          <button class="plan-del" onclick="delPlanItem('${it.id}')" title="删除">×</button>
+        </div>`).join('')}</div>`
+    : `<div class="plan-empty"><b>今天还没有计划</b><span>在下面加一条，把今天安排明白</span></div>`;
+
+  const sug = suggestSectionId();
+  const sugSec = sug ? secById(sug) : null;
+
+  return `<div class="card plan-card mt-16 mb-16">
+    <div class="plan-top">
+      <div>
+        <div class="plan-eyebrow">TODAY · ${dateStr}</div>
+        <div class="plan-title">今日计划</div>
+      </div>
+      ${examHtml}
     </div>
 
-    <div class="mode-grid mt-24">
+    ${items.length ? `<div class="plan-progress ${allDone ? 'all-done' : ''}">
+      <div class="plan-bar"><i style="width:${pct}%"></i></div>
+      <div class="plan-progress-text">${allDone ? `已完成 ${doneN} / ${items.length} · 全部完成` : `已完成 ${doneN} / ${items.length}`}</div>
+    </div>` : ''}
+
+    ${list}
+
+    <div class="plan-add">
+      <span class="plan-add-icon">＋</span>
+      <input id="planNew" class="plan-new" placeholder="写一条今天的计划…" onkeydown="if(event.key==='Enter'){event.preventDefault();addPlanItem();}">
+      <button class="plan-add-btn" onclick="addPlanItem()">添加</button>
+    </div>
+
+    ${sugSec ? `<div class="plan-suggest"><span class="sug-tag">建议</span><span class="sug-text"><b>${esc(sugSec.name)}</b> · ${sugSec.count} 题 / ${sugSec.minutes} 分</span><button class="sug-add" onclick="addSuggestedPlan()">加入</button></div>` : ''}
+
+    <div class="week-strip">
+      ${wk.map(d => `<div class="week-day ${d.done ? 'done' : ''} ${d.isToday ? 'today' : ''} ${d.future ? 'future' : ''}" title="${d.key}${d.done ? ' · 已练习' : ''}">
+        <span class="wd-label">${d.label}</span><span class="wd-dot"></span>
+      </div>`).join('')}
+    </div>
+
+    <div class="plan-foot">
+      <span>本周 ${weekDone}${wGoal ? ' / ' + wGoal : ''} 天${wGoal && weekDone >= wGoal ? ' · 已达标' : ''}</span>
+      <span>连续 ${sk.cur} 天 · 最长 ${sk.longest} 天</span>
+    </div>
+  </div>`;
+}
+
+function renderHome(app) {
+  const stats = todayStats();
+  const now = new Date();
+  const dt = daysToExam();
+  const subBits = [`${now.getMonth()+1}月${now.getDate()}日 周${'日一二三四五六'[now.getDay()]}`];
+  if (dt != null) subBits.push(dt > 0 ? `距${config.examName} ${dt} 天` : dt === 0 ? `${config.examName} · 今天` : `${config.examName}已过 ${-dt} 天`);
+  subBits.push(stats.count ? `已练 ${stats.count} 组 · ${fmtMinSec(stats.ms)}` : '还没有记录');
+  app.innerHTML = `
+    <div class="hero">
+      <h1>${esc(HOME_QUIP)}</h1>
+      <div class="sub">${esc(subBits.join(' · '))}</div>
+    </div>
+
+    ${renderPlanCard()}
+
+    <div class="mode-grid">
       <div class="mode-card" onclick="go('section-setup')">
         <div class="ico">▤</div>
         <div class="t">专项练习</div>
@@ -811,6 +1287,65 @@ function aggregate(list) {
 function accPct(a) { return a.total > 0 ? (a.correct / a.total * 100) : null; }
 function accCell(a) { const p = accPct(a); return p == null ? '—' : p.toFixed(0) + '%'; }
 
+/* ----- 练习热力图(近 13 周) ----- */
+function renderHeatmap() {
+  const weeks = 13;
+  const dayMap = practiceDayMap();
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const dow = (today.getDay() + 6) % 7;                 // 周一 = 0
+  const start = addDays(today, -dow - (weeks - 1) * 7);
+
+  let cols = '';
+  for (let w = 0; w < weeks; w++) {
+    let cells = '';
+    for (let d = 0; d < 7; d++) {
+      const day = addDays(start, w * 7 + d);
+      const key = dateKey(day);
+      if (day > today) { cells += `<span class="heat-cell future"></span>`; continue; }
+      const ms = dayMap[key] || 0;
+      const min = ms / 60000;
+      const lv = ms <= 0 ? 0 : min < 20 ? 1 : min < 45 ? 2 : min < 90 ? 3 : 4;
+      const label = ms <= 0 ? '未练习' : `${Math.max(1, Math.round(min))} 分钟`;
+      cells += `<span class="heat-cell lv${lv}" title="${key} · ${label}"></span>`;
+    }
+    cols += `<div class="heat-col">${cells}</div>`;
+  }
+
+  return `<div class="card card-pad mb-16">
+    <div class="row" style="justify-content:space-between;align-items:baseline;margin-bottom:14px;gap:8px">
+      <div class="section-title">练习热力图</div>
+      <div class="muted-3" style="font-size:11px">${dateKey(start)} ~ ${dateKey(today)}</div>
+    </div>
+    <div class="heat-grid">${cols}</div>
+    <div class="heat-legend">
+      <span>近 ${weeks} 周 · 累计 ${streakInfo().totalDays} 天有练习</span>
+      <span class="heat-scale">少 <i class="heat-cell lv0"></i><i class="heat-cell lv1"></i><i class="heat-cell lv2"></i><i class="heat-cell lv3"></i><i class="heat-cell lv4"></i> 多</span>
+    </div>
+  </div>`;
+}
+
+/* ----- 成就墙 ----- */
+function renderAchievements() {
+  const ctx = achContext();
+  const rows = ACHIEVEMENTS.map(a => ({ ...a, on: a.check(ctx) }));
+  const n = rows.filter(r => r.on).length;
+
+  return `<div class="card card-pad mb-16">
+    <div class="row" style="justify-content:space-between;align-items:baseline;margin-bottom:14px">
+      <div class="section-title">成就</div>
+      <div class="muted-3" style="font-size:12px">已解锁 ${n} / ${rows.length}</div>
+    </div>
+    <div class="ach-grid">
+      ${rows.map(a => `<div class="ach ${a.on ? 'on' : ''}">
+        <div class="ach-ico">${a.ico}</div>
+        <div class="ach-name">${esc(a.name)}</div>
+        <div class="ach-desc">${esc(a.desc)}</div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
 function renderStats(app) {
   const today = aggregate(records.filter(r => recordDay(r) === todayKey()));
   const all = aggregate(records);
@@ -861,7 +1396,10 @@ function renderStats(app) {
         </div>
         ${rangeHtml}
       ` : `<div class="empty" style="padding:24px">还没有练习记录</div>`}
-    </div>`;
+    </div>
+
+    ${renderHeatmap()}
+    ${renderAchievements()}`;
 }
 
 /* =====================================================================
@@ -1114,6 +1652,7 @@ function saveSection() {
   const s = session;
   const c = parseInt($('#correct').value);
   if (isNaN(c) || c < 0 || c > s.questionCount) { toast('请填写正确的做对题数'); return; }
+  const before = unlockedSet();
   s.correct = c;
   s.errorType = s.errorType || [];
   s.note = ($('#note') || {}).value || '';
@@ -1127,7 +1666,10 @@ function saveSection() {
     errorType: s.errorType, note: s.note,
   });
   saveRecords();
-  toast('已保存');
+  const newly = newlyUnlocked(before);
+  toast(newly.length
+    ? `已保存 · 解锁「${newly[0].name}」${newly.length > 1 ? ` 等 ${newly.length} 个成就` : ''}`
+    : '已保存');
   session = null;
   go('home');
 }
@@ -1356,6 +1898,7 @@ function mockSegCorrect(i, v) {
 
 function saveMock() {
   const s = session;
+  const before = unlockedSet();
   records.push({
     id: uid(), type:'mock', date: new Date().toISOString(),
     startAt: s.startAt || null, endAt: s.endAt || null,
@@ -1366,7 +1909,10 @@ function saveMock() {
     })),
   });
   saveRecords();
-  toast('已保存');
+  const newly = newlyUnlocked(before);
+  toast(newly.length
+    ? `已保存 · 解锁「${newly[0].name}」${newly.length > 1 ? ` 等 ${newly.length} 个成就` : ''}`
+    : '已保存');
   session = null;
   go('home');
 }
@@ -1422,6 +1968,19 @@ function renderSettings(app) {
       </div>
     </div>
 
+    <div class="card card-pad mb-16">
+      <div class="section-title mb-16">计划与目标</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div><label class="fl">考试名称</label>
+          <input type="text" id="examName" value="${esc(config.examName || '')}" placeholder="2027 国考"></div>
+        <div><label class="fl">考试日期</label>
+          <input type="date" id="examDate" value="${esc(config.examDate || '')}"></div>
+        <div><label class="fl">每周目标天数(0-7)</label>
+          <input type="number" id="weeklyGoalDays" value="${config.weeklyGoalDays || 0}" min="0" max="7"></div>
+      </div>
+      <div class="muted-3 mt-8" style="font-size:12px">首页「今日计划」是每天可增删改的清单,勾选即完成;倒计时按这里的考试日期计算。</div>
+    </div>
+
     <div class="row gap-8">
       <button class="btn btn-primary" style="flex:1" onclick="saveSettings()">保存设置</button>
       <button class="btn" onclick="resetConfig()">恢复默认</button>
@@ -1443,6 +2002,14 @@ function saveSettings() {
   if (et.length) config.errorTypes = et;
   const tm = parseInt($('#totalMinutes').value);
   if (!isNaN(tm) && tm > 0) config.totalMinutes = tm;
+
+  const en = $('#examName').value.trim();
+  if (en) config.examName = en;
+  const ed = $('#examDate').value;
+  if (ed) config.examDate = ed;
+  const wg = parseInt($('#weeklyGoalDays').value);
+  if (!isNaN(wg) && wg >= 0 && wg <= 7) config.weeklyGoalDays = wg;
+
   // 同步 mockOrder 中可能被删的板块
   config.mockOrder = config.mockOrder.filter(id => secById(id));
   saveConfig();
